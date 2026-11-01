@@ -2,7 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 const on = (ch) => (cb) => ipcRenderer.on(ch, (_e, v) => cb(v));
 contextBridge.exposeInMainWorld('pet', {
   hover: (over) => ipcRenderer.send('hover', over),
-  dragStart: () => ipcRenderer.send('drag-start'),
+  dragStart: (origin) => ipcRenderer.send('drag-start', origin),
   dragEnd: () => ipcRenderer.send('drag-end'),
   chat: (text) => ipcRenderer.send('chat', text),
   fatal: (msg) => ipcRenderer.send('fatal', msg),
@@ -27,6 +27,7 @@ contextBridge.exposeInMainWorld('pet', {
   onApp: on('app'),
   onPrivate: on('private'),
   onTuckComplete: on('tuck-complete'),
+  onDragMotion: on('drag-motion'),
   onTestVoice: on('test-voice'),
   onControlsBlur: on('controls-blur'),
   desk: () => ipcRenderer.invoke('desk'),

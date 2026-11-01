@@ -1,3 +1,7 @@
+# rc.6 motion update
+
+Manual source-preview observations: native drag changed the window position; the existing hair constraints now have advancing time and nonzero motion. Tuck and return showed outgoing/incoming sparkles, and observed return bounds matched the previous standing position. Review caught and corrected seated offsets and queued fullscreen transitions. No automated test suite was run. Fresh-machine voice playback remains unconfirmed; Test game voice now logs decoded playback details. AI speech synthesis is not implemented. Earlier observations below are version-specific history.
+
 # rc.5 controls update
 
 The original desktop pet control sprites and serialized vertical menu layout were inspected locally. The new right-click menu and More controls page were opened manually in the small source preview; Escape dismissal was observed. Outfit selection changed Lilith to pajamas. After review, native window blur was connected to menu dismissal; a real click on Explorer’s title bar visibly closed the menu. Movement/audio verification below belongs to rc.4, not a new full regression pass. No automated test suite was run.

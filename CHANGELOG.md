@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1-rc.6 — private prerelease
+
+- Restore sparkle teleport for tuck/return instead of sliding the window. Remember the previous position, correct seated offsets, and clamp the return if a display changes.
+- Advance Spine’s physics clock and feed actual window-drag movement to the existing physics constraints, restoring hair motion. Preserve the pointer-down anchor for fast drag pickup.
+- Queue tuck requests during transitions and reconcile automatic fullscreen changes without losing manual overrides.
+- Include decoded clip duration, channels and audio-engine state in the copied log after Test game voice. Audible playback on the reported new desktop remains unconfirmed; AI replies still have no TTS.
+
 ## 1.0.1-rc.5 — private prerelease
 
 - Replace the hover toolbar with the original desktop pet’s vertical right-click controls, using its normal and red-corner hover button sprites from locally extracted assets.

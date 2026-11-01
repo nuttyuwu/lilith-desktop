@@ -636,5 +636,9 @@ api.onTestVoice(async () => {
   const file = Object.entries(assets.voice).find(([key]) => key.endsWith(suffix))?.[1];
   if (!file) return show('No voice file was found for this language. Please prepare the game assets again.', 12000);
   show('Playing a game voice. If you cannot hear it, check Windows mute, Volume mixer, and your output device.', 14000);
-  if ((await playClip(file)) === false) show('The voice could not play. Check the Lilith log for the audio error.', 12000);
+  const played = await playClip(file);
+  if (played === false) show('The voice could not play. Use Settings / tray menu → Copy log and send the audio error.', 12000);
+  if (played === true) console.warn('voice test started', JSON.stringify({ file, language: lifeCfg.voice,
+    context: actx.state, sampleRate: actx.sampleRate, duration: voice?.src?.buffer?.duration,
+    channels: voice?.src?.buffer?.numberOfChannels }));
 });

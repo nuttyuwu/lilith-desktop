@@ -114,8 +114,8 @@ function play(anim, then) {
 // in a sparkle burst and fades back in once main has moved the window, so the jump is never seen.
 const fx = document.getElementById('fx');
 let poofT = 0;
-function poof(quiet) {   // quiet: only extend the hidden moment, no new sparkles
-  if (!app || !skeleton || demoing) return;
+function poof(quiet, hold = false) {   // quiet: only extend the hidden moment, no new sparkles
+  if (!app || !skeleton || (demoing && !hold)) return;
   if (quiet) { canvas.classList.add('poof'); clearTimeout(poofT); poofT = setTimeout(() => canvas.classList.remove('poof'), 160); return; }
   skeleton.getBounds(_bo, _bs, []);
   const cam = app.renderer.camera, dpr = window.devicePixelRatio || 1;
@@ -129,7 +129,7 @@ function poof(quiet) {   // quiet: only extend the hidden moment, no new sparkle
     fx.appendChild(e); setTimeout(() => e.remove(), 1100);
   }
   canvas.classList.add('poof');
-  clearTimeout(poofT); poofT = setTimeout(() => canvas.classList.remove('poof'), 260);   // window move + reframe land within this
+  clearTimeout(poofT); poofT = setTimeout(() => canvas.classList.remove('poof'), hold ? 1800 : 260);   // window move + reframe land within this
 }
 
 // --- speech bubble ---
@@ -285,7 +285,7 @@ window.addEventListener('mousemove', (e) => {
     if (activity === 'sleep' || activity === 'waking') pillowUntil = Date.now() + PILLOW_MS;   // pulled out of bed: she takes her pillow along
     if (typeof moodDrag === 'function') moodDrag(activity === 'sleep' || activity === 'waking');
     endActivity(false); perched = false;   // sofa/bed frame must go before the window moves
-    dragging = true; api.dragStart(); stopChain(); fire('DragStart', { force: true });
+    dragging = true; api.dragStart({ x: down.x, y: down.y }); stopChain(); fire('DragStart', { force: true });
     state.setEmptyAnimation(T_FACE, 0.1); state.setAnimation(T_BODY, outfit.falling, true); busy = true;
   }
 });
@@ -499,7 +499,7 @@ function tuckPose() {
 // Tucked on the right edge = mirrored so she faces into the screen; lean toward the visible side so both eyes show.
 const LEAN_DEG = 12, LEAN_SHIFT = 220;   // deg, skeleton units toward the hidden side
 let tuckSide = 'right', lean = 0;
-// Main slides the window while she holds a visible pose, then releases the greeting.
+// Hide the drawing within sparkles, then reveal it only after main teleports the window.
 let tuckLeaving = false;
 api.onTuck((v) => {
   const on = typeof v === 'object' ? v.on : v;
@@ -511,16 +511,21 @@ api.onTuck((v) => {
   busy = true;
   state.setEmptyAnimation(T_FACE, 0.15);
   state.setEmptyAnimation(T_MOUTH, 0.15);
-  if (on) tuckPose(); else state.setAnimation(T_BODY, outfit.idle, true);
+  poof(false, true);
 });
 api.onTuckComplete(({ on }) => {
   if (on !== tucked) return;
   tuckLeaving = false;
   if (!data) return;
-  if (!on) {
+  if (on) tuckPose();
+  else {
     lean = 0; const root = skeleton.getRootBone(); root.rotation = 0; root.x = root.data.x;
     play(outfit.greet);
   }
+  skeleton.updateWorldTransform(spine.Physics.reset);
+  fx.replaceChildren();
+  poof(false, true);
+  clearTimeout(poofT); poofT = setTimeout(() => canvas.classList.remove('poof'), 80);
 });
 // Private windows in front (password managers, private browsing, sign-in pages; main + apps.js): she turns her back
 // (the game's SecretHide, stand_casual_back_prepare -> stand_casual_back) until you leave it.
@@ -635,6 +640,14 @@ function startRenderer() {
     },
   });
 }
+// OS window movement is outside Spine's coordinate system: feed it to the existing physics rig.
+api.onDragMotion(({ x, y }) => {
+  if (tucked || !skeleton || !app || !Number.isFinite(x) || !Number.isFinite(y)) return;
+  const units = app.renderer.camera.zoom * (window.devicePixelRatio || 1);
+  const limit = 120; // bound a delayed/large cursor jump; the constraint applies its own limits too
+  skeleton.physicsTranslate(Math.max(-limit, Math.min(limit, x)) * units,
+    -Math.max(-limit, Math.min(limit, y)) * units);
+});
 function frameUpdate(dt) {
         dt = Math.min(dt, 1 / 20);   // a stalled frame (GPU busy, window move) must not make her jump ahead
         unlook(); state.update(dt); state.apply(skeleton);
@@ -646,6 +659,7 @@ function frameUpdate(dt) {
         lifeTick(dt);
         patTick();
         look(dt);
+        skeleton.update(dt);
         skeleton.updateWorldTransform(spine.Physics.update);
         if (!busy && !dragging && !talking && !tucked && !demoing && !setupOn && !bar.classList.contains('show') && !activity && (idleTimer -= dt) <= 0) nextBehavior();
 }
