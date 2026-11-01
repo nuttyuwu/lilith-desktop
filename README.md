@@ -1,4 +1,30 @@
-# Lilith Desktop
+<p align="center">
+  <img src="docs/images/lilith-hero.jpg" alt="Lilith running on a purple demo desktop beside the words A little company. A little mischief." width="100%">
+</p>
+
+<h1 align="center">✦ Lilith Desktop ✦</h1>
+
+<p align="center">
+  <strong>Your desktop, with a little more personality.</strong><br>
+  An unofficial fan-made companion with local chat, coding reactions, and everyday company.
+</p>
+
+<p align="center">
+  <img alt="Windows x64" src="https://img.shields.io/badge/Windows-x64-8c7ae6?style=for-the-badge">
+  <img alt="Local chat through Ollama" src="https://img.shields.io/badge/Chat-Ollama-c59cdb?style=for-the-badge">
+  <img alt="Private prerelease rc.3" src="https://img.shields.io/badge/Private_prerelease-rc.3-dba4c5?style=for-the-badge">
+</p>
+
+<p align="center">
+  <a href="https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1-rc.3"><strong>Download Lilith</strong></a> ·
+  <a href="#see-her-on-your-desktop">Demo gallery</a> ·
+  <a href="#give-lilith-a-chat-model">Set up her chat model</a> ·
+  <a href="#controls">Controls</a>
+</p>
+
+---
+
+## Why I made this
 
 I'll be honest: I'm not happy with where the second game is going. To me, it stripped away much of the original game's theme and aesthetic, and I don't really care for that direction. Those were a big part of why the original stayed with me.
 
@@ -9,6 +35,26 @@ What I do like is Lilith's existing desktop pet. The game's creators had already
 The desktop pet was already there. I wanted to build on that idea with something more interactive: a companion that reacts to what I'm doing, notices the hour, and becomes part of my workflow. This project builds a Windows desktop app around the character rig and assets read from your own installed copy of the game.
 
 So I added Claude Code reactions, time and day awareness, Spotify controls, and local chat through Ollama. She can still walk around, rest, change clothes, and react when you click her. Now she also has more to respond to while you're actually using your computer.
+
+## See her on your desktop
+
+<table>
+  <tr>
+    <td align="center" width="50%"><img src="docs/images/lilith-greeting.jpg" alt="Lilith in her casual outfit saying Were you waiting for me?" width="350"><br><strong>A familiar face</strong><br>Animated expressions, little greetings, and the original character's charm.</td>
+    <td align="center" width="50%"><img src="docs/images/lilith-chat.jpg" alt="Lilith with her chat input, Claude and GPT buttons, and music controls visible" width="350"><br><strong>More ways to interact</strong><br>Open chat, reach your coding tools, and control music from her compact interface.</td>
+  </tr>
+</table>
+
+*Real screenshots of the running Windows app, captured against a staged demo backdrop. The dialogue shown comes from the game; these captures do not demonstrate a generated LLM reply. Character artwork belongs to the original game's creators.*
+
+## Make yourself at home
+
+| 💬 Talk | ✦ Work together | ☾ Keep company |
+|---|---|---|
+| Local conversation through Ollama and Llama 3.2. | Reactions to Claude Code activity and access to coding tools. | Time-aware reactions, outfits, and little moments throughout the day. |
+| [Set up the model](#give-lilith-a-chat-model) | [Integration details](#optional-integrations-and-local-data) | [Learn the controls](#controls) |
+
+> **Getting started:** install the original game → [download Lilith](https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1-rc.3) → click **Start** to prepare her assets. For generated chat, [install Ollama and the model](#give-lilith-a-chat-model).
 
 ## What I added
 
@@ -23,11 +69,11 @@ The character, artwork, animations, and voices belong to the original game's cre
 
 ## Current status
 
-**Version `1.0.1-rc.3` — local prerelease candidate.** This candidate adds bundled asset preparation. The earlier `rc.1` received focused manual checks for installation, launch, screen-edge placement, size changes, hook preference persistence, and quitting; those observations are not a clean-machine validation of this new setup flow.
+**Version `1.0.1-rc.3` — private prerelease.** The Windows builds include bundled asset preparation and startup guidance for the chat model. The earlier `rc.1` received focused manual checks for installation, launch, screen-edge placement, size changes, hook preference persistence, and quitting; those observations are not a clean-machine validation of this new setup flow.
 
 This is still a work in progress. Clean-machine setup, audio, sleep/wake, multiple monitors, and a continuously observed long run need more testing. See the [release notes](CHANGELOG.md) and [validation record](docs/RELEASE.md) for the exact coverage.
 
-The intended repository is `nuttyuwu/lilith-desktop`. A public release has not been published; distribution of the game-derived face icon and the Spine runtime still needs to be cleared.
+Source and downloads are available in the private `nuttyuwu/lilith-desktop` repository. A public release has not been published; distribution of the game-derived face icon and the Spine runtime still needs to be cleared.
 
 ## Requirements
 
@@ -41,11 +87,11 @@ The animated model, textures, voices, and dialogue are extracted from the player
 
 ## Install or run
 
-When an approved release is published, its intended download page is [GitHub Releases](https://github.com/nuttyuwu/lilith-desktop/releases).
+Download the current [private prerelease](https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1-rc.3). You must have access to this repository to view its files. The Windows binaries are unsigned.
 
 | File | Use |
 |---|---|
-| `Lilith Setup <version>.exe` | Install Lilith with Desktop and Start Menu shortcuts. Current-user installation is the manually checked option. |
+| `Lilith.Setup.<version>.exe` | Install Lilith with Desktop and Start Menu shortcuts. Current-user installation is the manually checked option. |
 | `Lilith.exe` | Run without installing the app. The runtime extracts temporarily and is removed on exit; settings and extracted game data remain in your user folders. |
 
 The locally built executables are unsigned. Publisher signing has not been configured.
