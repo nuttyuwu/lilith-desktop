@@ -259,6 +259,7 @@ function createWindow() {
       backgroundThrottling: false },   // tucked mostly off-screen, Windows can treat her as hidden and throttle her to ~1 fps: choppy loop, late sparkles
   });
   setBounds(bounds);   // normalise Windows' initial frame rounding before the first walk
+  win.on('blur', () => win?.webContents.send('controls-blur'));
   win.setAlwaysOnTop(cfg.alwaysOnTop, 'screen-saver');
   win.setIgnoreMouseEvents(true, { forward: true });
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
@@ -716,6 +717,12 @@ onPet('sit', (_e, px, floor) => {
 // hover bar: Claude / ChatGPT, or Spotify transport (music-*). Hide + Demo live in the tray.
 onPet('toolbar', (_e, a) => {
   if (a === 'test-voice') return win.webContents.send('test-voice');
+  if (a === 'tuck') return setTucked(true);
+  if (a === 'quit') return farewell();
+  if (a === 'settings') return tray?.popUpContextMenu(trayMenu);
+  if (a === 'outfit-casual' || a === 'outfit-pajamas') {
+    outfit = a.slice(7); return win.webContents.send('outfit', outfit);
+  }
   if (typeof a === 'string') return a.startsWith('music-') ? music(a.slice(6)) : launch(a);
 });
 
@@ -768,7 +775,7 @@ function assetIndex() {
   }
   try {
     const sprites = fs.readdirSync(path.join(RIP, 'sprites'));
-    for (const [key, name] of Object.entries({ bubble: 'Choise_Bubble', panel: 'Settings_Bg_FixSize', music: 'music_panel_bg' })) {
+    for (const [key, name] of Object.entries({ bubble: 'Choise_Bubble', panel: 'Settings_Bg_FixSize', music: 'music_panel_bg', control: 'btn_unhold', controlHover: 'btn_hold' })) {
       const file = sprites.find(f => new RegExp('^' + name + '_[0-9]+\\.png$').test(f));
       if (file) idx.ui[key] = `sprites/${file}`;
     }

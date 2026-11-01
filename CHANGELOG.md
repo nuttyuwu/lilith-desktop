@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.1-rc.5 — private prerelease
+
+- Replace the hover toolbar with the original desktop pet’s vertical right-click controls, using its normal and red-corner hover button sprites from locally extracted assets.
+- Keep talk, outfits and Exit Realm in the main menu; place voice testing, coding integrations, music, tuck and tray settings in More controls.
+- Add keyboard dismissal, hidden-page focus isolation and bounded scrolling for small windows. Close controls on focus loss, setup and demos; pause idle roaming while browsing controls.
+
 ## 1.0.1-rc.4 — private prerelease
 
 - Replace the delayed tuck/return teleport with a continuous window slide, keeping Lilith visible during return.

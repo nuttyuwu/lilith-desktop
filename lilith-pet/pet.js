@@ -178,11 +178,12 @@ api.onSayStart(sayStart); api.onSayToken(sayToken); api.onSayEnd(sayEnd);
 api.onSayError((m) => { mouth(false); show(m, 8000); });
 
 // --- chat input ---
-// The chat box closes itself after 10 s without typing (Ctrl+Alt+L or right-click brings it back any time).
+// The chat box closes itself after 10 s without typing (Ctrl+Alt+L or the right-click menu brings it back any time).
 const CHAT_IDLE_MS = 10000;
 let chatTimer = 0;
 const chatIdle = () => { clearTimeout(chatTimer); chatTimer = setTimeout(closeChat, CHAT_IDLE_MS); };
 function openChat() {
+  showBar(false);
   chatBox.classList.add('show'); api.hover(true); lastOver = true; setTimeout(() => input.focus(), 30); chatIdle();
   // the game's "Lilith~?" (CallLilith) and its talk menu as chips; typing still goes to Ollama
   if (fire('CallLilith')) setTimeout(() => { if (chatBox.classList.contains('show') && !chainOn) talkMenu(); }, 3000); else talkMenu();
@@ -272,8 +273,7 @@ function updateHover(e) {
   lastProbe = now;
   const onBar = bar.classList.contains('show') && !!e.target.closest?.('#bar');
   const onHer = alphaAt(e.clientX, e.clientY) > 20;
-  const over = dragging || onHer || onBar || (bubble.classList.contains('show') && !!e.target.closest?.('#bubble'));   // reply chips live inside the bubble
-  if (onHer || onBar) showBar(true); else if (bar.classList.contains('show')) showBar(false);
+  const over = bar.classList.contains('show') || dragging || onHer || onBar || (bubble.classList.contains('show') && !!e.target.closest?.('#bubble'));   // reply chips live inside the bubble
   if (over !== lastOver) { lastOver = over; api.hover(over); }
 }
 let down = null;
@@ -290,6 +290,7 @@ window.addEventListener('mousemove', (e) => {
   }
 });
 window.addEventListener('mousedown', (e) => {
+  if (bar.classList.contains('show') && !e.target.closest?.('#bar')) { showBar(false); return; }
   if (e.target.closest?.('#bubble, #chat, #bar, #setup')) return;   // talk-menu chips, chat, toolbar: not a poke
   if (e.button === 0 && lastOver) down = { x: e.screenX, y: e.screenY, head: !tucked && !demoing ? headHit(e.clientX, e.clientY) : 0 };
 });
@@ -377,10 +378,17 @@ const flirty = () => !(lifeCfg.profile?.age != null && lifeCfg.profile.age < 18)
 // Sitting/lying: every reaction happens in the pose (a standing action would tear her out of it).
 function seatedReact() { if (activity === 'sit') sitFidget('sit_casual_shake_leg'); else if (activity === 'lie') lieFidget(); }
 
-window.addEventListener('contextmenu', (e) => { e.preventDefault(); if (lastOver && !tucked) openChat(); });   // right-click her to talk
-// --- hover toolbar: Claude / GPT / Spotify ---
+window.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  if (lastOver && !tucked && !setupOn) { closeChat(); showBar(!bar.classList.contains('show')); }
+});
+// Original pet-style right-click controls; added integrations live on a secondary page.
 const bar = document.getElementById('bar');
-let barTimer = 0;
+function controlPage(name) {
+  for (const page of bar.querySelectorAll('[data-page]')) page.hidden = page.dataset.page !== name;
+  bar.scrollTop = 0;
+  bar.querySelector('[data-page]:not([hidden]) button')?.focus({ preventScroll: true });
+}
 // Toolbar just above her head, speech bubble above the toolbar, both following her head (standing, sitting on a
 // window, mid-animation). The bubble is as big as what she says: up to the window top, then over her a little, then scroll.
 const _bo = new spine.Vector2(), _bs = new spine.Vector2();
@@ -391,9 +399,7 @@ function layoutUi() {
   skeleton.getBounds(_bo, _bs, []);
   const cam = app.renderer.camera, dpr = window.devicePixelRatio || 1;
   const head = (canvas.height / 2 - (_bo.y + _bs.y - cam.position.y) / cam.zoom) / dpr;   // CSS y of her hair top
-  const s = Math.min(1, (innerWidth - 6) / bar.offsetWidth);   // shrink to fit narrow windows instead of being cut off
-  bar.style.setProperty('--s', s.toFixed(3));
-  const barTop = Math.max(2, Math.round(head - bar.offsetHeight * s - 4));
+  const barTop = Math.max(8, Math.min(Math.round(head), innerHeight - bar.offsetHeight - 8));
   bar.style.top = `${barTop}px`;
   if (!bubble.classList.contains('show')) return;
   const border = bubble.offsetHeight - bubble.clientHeight;
@@ -401,19 +407,34 @@ function layoutUi() {
   const top = Math.round(Math.max(4, bottom - h));
   bubble.style.maxHeight = `${Math.round(h)}px`;
   bubble.style.top = `${top}px`;
-  if (top + h > bottom) bar.style.top = `${Math.round(top + h + 3)}px`;   // a long bubble reaches past her head: the bar goes under it, never over the text
+
 }
 function showBar(on) {
-  clearTimeout(barTimer);
-  if (on && !tucked && !demoing && !dragging && !setupOn) { layoutUi(); bar.classList.add('show'); }
-  else barTimer = setTimeout(() => bar.classList.remove('show'), on ? 0 : 1500);
+  const visible = !!(on && !tucked && !demoing && !dragging && !setupOn);
+  bar.classList.toggle('show', visible);
+  bar.inert = !visible;
+  if (visible) {
+    if (activity === 'walk') stopWalk();
+    lastInteraction = Date.now();
+    api.hover(true); api.focus(); lastOver = true;
+    controlPage('main'); layoutUi();
+  } else { bar.querySelector(':focus')?.blur(); api.hover(false); lastOver = null; }
 }
 bar.addEventListener('click', (e) => {
-  const a = e.target.closest?.('button')?.dataset.a; if (!a) return;   // clicks can land on the svg inside a button
-  if (!a.startsWith('music-')) bar.classList.remove('show');   // media buttons stay up for a second press
-  api.toolbar(a);
+  const button = e.target.closest?.('button');
+  if (!button) return;
+  if (button.dataset.pageTarget) { controlPage(button.dataset.pageTarget); layoutUi(); return; }
+  const a = button.dataset.a;
+  if (!a) return;
+  if (!a.startsWith('music-')) showBar(false);
+  if (a === 'talk') return openChat();
+  if (a !== 'close') api.toolbar(a);
 });
-document.addEventListener('mouseleave', () => showBar(false));
+window.addEventListener('blur', () => { if (bar.classList.contains('show')) showBar(false); });
+api.onControlsBlur(() => { if (bar.classList.contains('show')) showBar(false); });
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && bar.classList.contains('show')) { e.preventDefault(); showBar(false); }
+});
 api.onPerchLost(() => { perched = false; endActivity(false); if (!dragging && !tucked && !demoing) { busy = true; state.setEmptyAnimation(T_FACE, 0.1); state.setAnimation(T_BODY, outfit.falling, true); } });
 api.onPerchGone(() => { perched = false; if (activity === 'sit' || activity === 'lie') endActivity(true); });   // re-placed on the floor (screen/size change)
 api.onLanded((v) => {
@@ -486,7 +507,7 @@ api.onTuck((v) => {
   tucked = on; perched = false; tuckLeaving = !on;
   if (!data) return;
   endActivity(false); stopChain(); closeChat();
-  bar.classList.remove('show'); bubble.className = '';
+  showBar(false); bubble.className = '';
   busy = true;
   state.setEmptyAnimation(T_FACE, 0.15);
   state.setEmptyAnimation(T_MOUTH, 0.15);
@@ -626,7 +647,7 @@ function frameUpdate(dt) {
         patTick();
         look(dt);
         skeleton.updateWorldTransform(spine.Physics.update);
-        if (!busy && !dragging && !talking && !tucked && !demoing && !setupOn && !activity && (idleTimer -= dt) <= 0) nextBehavior();
+        if (!busy && !dragging && !talking && !tucked && !demoing && !setupOn && !bar.classList.contains('show') && !activity && (idleTimer -= dt) <= 0) nextBehavior();
 }
 function frameRender(c) {
         const r = c.renderer;

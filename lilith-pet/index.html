@@ -23,17 +23,6 @@
   #bubble.claude { border-left: 4px solid #d97757; }
   #bubble.action { cursor: pointer; border-bottom: 3px solid #b5163a; }
   #bubble.action:hover { background: #fff; }
-  /* one slim pill above her head (pet.js places it); app buttons as text, media as icons */
-  #bar { --s: 1; position: absolute; left: 50%; top: 30%; transform: translateX(-50%) translateY(4px) scale(var(--s)); transform-origin: 50% 0; display: flex; align-items: center; gap: 1px;
-    padding: 3px; border-radius: 999px; background: rgba(22,20,30,.82); box-shadow: 0 3px 12px rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.1);
-    opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s; white-space: nowrap; }
-  #bar.show { opacity: 1; pointer-events: auto; transform: translateX(-50%) scale(var(--s)); }
-  #bar button { border: 0; border-radius: 999px; padding: 4px 7px; cursor: pointer; color: rgba(255,255,255,.9); background: transparent;
-    font: 600 clamp(9px, 3.3vw, 12px) "Segoe UI", sans-serif; line-height: 1; display: inline-flex; align-items: center; }
-  #bar button.icon { padding: 4px 5px; }
-  #bar button svg { width: 12px; height: 12px; fill: currentColor; pointer-events: none; }
-  #bar button:hover { background: #b5163a; color: #fff; }
-  #bar .sep { width: 1px; height: 14px; background: rgba(255,255,255,.18); margin: 0 2px; }
   #bubble .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; white-space: normal; }
   #bubble .chips button { border: 1px solid rgba(181,22,58,.35); border-radius: 999px; padding: 4px 9px; cursor: pointer; background: #fff; color: #3a2f3f;
     font: 600 clamp(9px, 3.4vw, 12px) "Segoe UI", sans-serif; text-align: left; }
@@ -60,14 +49,12 @@
   #bubble { border: 8px solid transparent; border-image: var(--game-bubble, none) 28 fill / 14px / 0 stretch;
     padding: 6px 14px; border-radius: 24px; color: var(--ink); background-color: #fff;
     box-shadow: 0 3px 0 #151326; font-family: "Segoe UI", "Yu Gothic UI", sans-serif; }
-  #bar, #setup { border: 2px solid #fff; border-radius: 7px;
+  #setup { border: 2px solid #fff; border-radius: 7px;
     background-color: #131315; background-image: var(--game-panel, conic-gradient(#202023 25%, #141416 0 50%, #202023 0 75%, #141416 0));
     background-size: 100% 100%; box-shadow: 3px 4px 0 #11111b; }
-  #bar { padding: 5px; gap: 3px; }
-  #bar::before, #setup::before { content: ""; position: absolute; width: 9px; height: 9px; left: -5px; top: -5px;
+  #setup::before { content: ""; position: absolute; width: 9px; height: 9px; left: -5px; top: -5px;
     border: 2px solid white; background: var(--accent); pointer-events: none; }
-  #bar button { border-radius: 3px; min-height: 24px; color: #fff; }
-  #bar button:hover, #setup button:hover, #setup button.primary { background: var(--accent); }
+  #setup button:hover, #setup button.primary { background: var(--accent); }
   #bubble .chips button { border: 1px solid #171722; border-radius: 4px; color: var(--ink); background: #fff; }
   #bubble .chips button:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
   #setup input, #setup select, #chat input { border: 2px solid #1b1926; border-radius: 5px; color: var(--ink); background: #fff; }
@@ -76,6 +63,20 @@
   #bar button:focus-visible, #bubble button:focus-visible, #setup button:focus-visible,
   #setup input:focus-visible, #setup select:focus-visible, #chat input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   #bubble { scrollbar-width: thin; scrollbar-color: #e94358 #f0edf1; }
+  /* Original pet's right-click menu: standalone white bars and its corner hover art. */
+  #bar { position: absolute; z-index: 5; left: 50%; top: 8px; transform: translateX(-50%);
+    width: min(294px, calc(100% - 16px)); max-height: calc(100% - 16px); overflow-y: auto;
+    visibility: hidden; pointer-events: none; scrollbar-width: thin; scrollbar-color: #e94358 #fff; }
+  #bar.show { visibility: visible; pointer-events: auto; }
+  #bar [hidden] { display: none; }
+  #bar button { position: relative; display: block; width: 100%; min-height: 48px; margin: 0 0 3px;
+    padding: 16px 20px 8px; border: 0; background: transparent; color: #11111b;
+    font: 600 clamp(12px, 4vw, 16px)/1.25 "Segoe UI", sans-serif; cursor: pointer; isolation: isolate; }
+  #bar button::before { content: ""; position: absolute; z-index: -1; inset: 10px 5px 3px;
+    background: #fff var(--game-control, none) center / 100% 100% no-repeat; border: 1px solid #171722; }
+  #bar button:hover::before, #bar button:focus-visible::before { inset: 0; border: 0;
+    background: var(--game-controlHover, linear-gradient(#fff, #fff)) center / 100% 100% no-repeat; }
+  #bar button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
   @media (prefers-reduced-motion: reduce) { #bar, #bubble { transition: none; } }
 </style>
 </head>
@@ -83,7 +84,31 @@
 <canvas id="c"></canvas>
 <div id="fx"></div>
 <div id="bubble"></div>
-<div id="bar"><button data-a="test-voice" title="Test game voice" aria-label="Test game voice">Voice</button><button data-a="claude" title="Claude Code">Claude</button><button data-a="chatgpt" title="Codex (ChatGPT)">GPT</button><span class="sep"></span><button class="icon" data-a="music-prev" title="Previous" data-t="bar.prev"><svg viewBox="0 0 24 24"><path d="M6 5h2.5v14H6zM20 5v14L9 12z"/></svg></button><button class="icon" data-a="music-toggle" title="Play / pause" data-t="bar.toggle"><svg viewBox="0 0 24 24"><path d="M3 5v14l9-7zM14 5h3v14h-3zM19 5h3v14h-3z"/></svg></button><button class="icon" data-a="music-next" title="Next" data-t="bar.next"><svg viewBox="0 0 24 24"><path d="M15.5 5H18v14h-2.5zM4 5v14l11-7z"/></svg></button></div>
+<div id="bar" role="region" aria-label="Lilith controls" inert>
+  <div data-page="main">
+    <button data-a="talk">Talk to Lilith…</button>
+    <button data-page-target="outfits">Dress up</button>
+    <button data-page-target="more">More controls</button>
+    <button data-a="quit">Exit Realm</button>
+    <button data-a="close">Close menu</button>
+  </div>
+  <div data-page="outfits" hidden>
+    <button data-a="outfit-casual">Everyday outfit</button>
+    <button data-a="outfit-pajamas">Pajamas</button>
+    <button data-page-target="main">Back</button>
+  </div>
+  <div data-page="more" hidden>
+    <button data-a="test-voice">Test game voice</button>
+    <button data-a="claude">Claude Code</button>
+    <button data-a="chatgpt">Codex / ChatGPT</button>
+    <button data-a="music-prev">Previous song</button>
+    <button data-a="music-toggle">Play / pause music</button>
+    <button data-a="music-next">Next song</button>
+    <button data-a="tuck">Tuck away</button>
+    <button data-a="settings">Settings / tray menu</button>
+    <button data-page-target="main">Back</button>
+  </div>
+</div>
 <div id="setup"><div id="setup-body"></div><div class="err" id="setup-err"></div></div>
 <div id="chat"><input id="msg" autocomplete="off"></div>
 <script src="node_modules/@esotericsoftware/spine-webgl/dist/iife/spine-webgl.js"></script>

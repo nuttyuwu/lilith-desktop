@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1-rc.4"><strong>Download Lilith</strong></a> ·
+  <a href="https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1-rc.5"><strong>Download Lilith</strong></a> ·
   <a href="#see-her-on-your-desktop">Demo gallery</a> ·
   <a href="#give-lilith-a-chat-model">Set up her chat model</a> ·
   <a href="#controls">Controls</a>
@@ -61,7 +61,7 @@ So I added Claude Code reactions, time and day awareness, Spotify controls, and 
 | Local conversation through Ollama and Llama 3.2. | Reactions to Claude Code activity and access to coding tools. | Time-aware reactions, outfits, and little moments throughout the day. |
 | [Set up the model](#give-lilith-a-chat-model) | [Integration details](#optional-integrations-and-local-data) | [Learn the controls](#controls) |
 
-> **Getting started:** install the original game → [download Lilith](https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1-rc.4) → click **Start** to prepare her assets. For generated chat, [install Ollama and the model](#give-lilith-a-chat-model).
+> **Getting started:** install the original game → [download Lilith](https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1-rc.5) → click **Start** to prepare her assets. For generated chat, [install Ollama and the model](#give-lilith-a-chat-model).
 
 ## What I added
 
@@ -76,7 +76,7 @@ The character, artwork, animations, and voices belong to the original game's cre
 
 ## Current status
 
-**Version `1.0.1-rc.4` — private prerelease.** The Windows builds include bundled asset preparation, chat-model guidance, smoother tuck/return movement, scaled-display movement corrections, game-style controls, and a voice playback check. The earlier `rc.1` received focused manual checks for installation, launch, screen-edge placement, size changes, hook preference persistence, and quitting; those observations are not a clean-machine validation of this new setup flow.
+**Version `1.0.1-rc.5` — private prerelease.** The Windows builds include bundled asset preparation, chat-model guidance, smoother tuck/return movement, scaled-display movement corrections, game-style controls, and a voice playback check. The earlier `rc.1` received focused manual checks for installation, launch, screen-edge placement, size changes, hook preference persistence, and quitting; those observations are not a clean-machine validation of this new setup flow.
 
 This is still a work in progress. Clean-machine setup, audio, sleep/wake, multiple monitors, and a continuously observed long run need more testing. See the [release notes](CHANGELOG.md) and [validation record](docs/RELEASE.md) for the exact coverage.
 
@@ -94,7 +94,7 @@ The animated model, textures, voices, and dialogue are extracted from the player
 
 ## Install or run
 
-Download the current [private prerelease](https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1-rc.4). You must have access to this repository to view its files. The Windows binaries are unsigned.
+Download the current [private prerelease](https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1-rc.5). You must have access to this repository to view its files. The Windows binaries are unsigned.
 
 | File | Use |
 |---|---|
@@ -117,7 +117,7 @@ If an instance is already running, launching again brings that instance back int
 |---|---|
 | Open the app menu | Right-click Lilith's system-tray icon; it may be in the hidden-icons area. |
 | Tuck or bring her back | `Ctrl+Alt+C` |
-| Open chat and conversation topics | `Ctrl+Alt+L`, or right-click the character |
+| Open chat and conversation topics | `Ctrl+Alt+L`, or right-click → Talk to Lilith… |
 | Move her | Drag the character, then release. |
 | Change outfit, size, screen, voice, or language | Tray → Settings, or the outfit items in the tray menu |
 | Recenter her | Tray → Settings → Reset position |
@@ -218,3 +218,5 @@ The project depends on Esoteric Software's Spine runtime under its [Spine Runtim
 ### If Lilith is silent
 
 Use **Voice** on her toolbar, or **Settings → Voice → Test voice** in the tray menu. Select Japanese or Chinese if her voice is off. If there is no playback error but you hear nothing, check Windows mute, Volume mixer, and the selected output device. The game’s recorded lines have voices; generated Ollama chat and setup notices are text-only, with no text-to-speech engine.
+
+Right-click Lilith for the original desktop pet’s white-button controls. Dress up changes her outfit; More controls contains voice testing, Claude/Codex, music, tuck away, and the full tray settings. Escape or clicking another app closes the menu. Button artwork is loaded from your own extracted game assets.

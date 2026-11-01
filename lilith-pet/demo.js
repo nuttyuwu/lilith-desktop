@@ -160,7 +160,7 @@ async function reel(tok) {
 async function startDemo(kind) {
   if (!data) return;
   const tok = ++demoToken;
-  endActivity(false); demoing = true; busy = true; closeChat(); api.hover(false);
+  showBar(false); endActivity(false); demoing = true; busy = true; closeChat(); api.hover(false);
   const prevOutfit = demoPrev = outfit === OUTFITS.pajamas ? 'pajamas' : 'casual';
   try { await (kind === 'reel' ? reel(tok) : tour(tok)); } catch (e) { if (!(e instanceof Stop)) console.error('demo', e); }
   if (tok !== demoToken) return;   // a newer demo or stopDemo took over

@@ -1,3 +1,7 @@
+# rc.5 controls update
+
+The original desktop pet control sprites and serialized vertical menu layout were inspected locally. The new right-click menu and More controls page were opened manually in the small source preview; Escape dismissal was observed. Outfit selection changed Lilith to pajamas. After review, native window blur was connected to menu dismissal; a real click on Explorer’s title bar visibly closed the menu. Movement/audio verification below belongs to rc.4, not a new full regression pass. No automated test suite was run.
+
 # Release preparation
 
 Target repository: `nuttyuwu/lilith-desktop`.

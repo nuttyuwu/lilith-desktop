@@ -28,6 +28,7 @@ contextBridge.exposeInMainWorld('pet', {
   onPrivate: on('private'),
   onTuckComplete: on('tuck-complete'),
   onTestVoice: on('test-voice'),
+  onControlsBlur: on('controls-blur'),
   desk: () => ipcRenderer.invoke('desk'),
   alive: (drew) => ipcRenderer.send('alive', drew),
   noFrame: () => ipcRenderer.send('no-frame'),

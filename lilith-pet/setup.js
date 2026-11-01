@@ -177,7 +177,7 @@ function cancelSetup() { run++; answer = null; hideCard(); setupOn = false; bubb
 
 function startSetup() {
   if (!data || demoing) return;
-  endActivity(false); closeChat(); setupOn = true; const r = ++run;
+  showBar(false); endActivity(false); closeChat(); setupOn = true; const r = ++run;
   api.hover(true); api.focus();   // the card needs clicks and typing
   draft = { ...(lifeCfg.profile || {}) };
   const langs = lifeCfg.langs || [['en', 'English']];
