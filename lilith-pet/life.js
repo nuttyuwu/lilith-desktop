@@ -73,7 +73,13 @@ function playClip(p, vol = 0.9, speech = true) {
   stopVoice();
   const ctx = audioCtx(), gain = ctx.createGain(), v = { gain, speech, ended: false, stopped: false, src: null };
   gain.gain.value = 0; gain.connect(ctx.destination); voice = v;
-  loadBuf(url).then((buf) => {
+  return loadBuf(url).then(async (buf) => {
+    if (ctx.state === 'suspended') {
+      let timeout;
+      try { await Promise.race([ctx.resume(), new Promise((_, reject) => { timeout = setTimeout(() => reject(new Error('Audio output did not resume')), 3000); })]); }
+      finally { clearTimeout(timeout); }
+    }
+    if (ctx.state !== 'running') throw new Error('Audio output is ' + ctx.state);
     if (v.stopped) return gain.disconnect();
     const src = ctx.createBufferSource(); src.buffer = buf; src.connect(gain); v.src = src;
     const t = ctx.currentTime + 0.005, end = t + buf.duration, g = gain.gain;
@@ -81,7 +87,8 @@ function playClip(p, vol = 0.9, speech = true) {
     g.setValueAtTime(vol, Math.max(t + FADE, end - FADE)); g.linearRampToValueAtTime(0, end);
     src.onended = () => { v.ended = true; gain.disconnect(); };
     src.start(t);
-  }).catch((e) => { v.ended = true; gain.disconnect(); console.warn('voice', p, e.message); });
+    return true;
+  }).catch((e) => { v.ended = true; gain.disconnect(); console.warn('voice', p, e.message); return false; });
 }
 function lineVoice(l) {
   const lang = lifeCfg.voice === 'cn' ? 'cn' : 'jp';
@@ -142,7 +149,7 @@ function initVoices() {
     },
   });
   if (/_greet$/.test(state.tracks[T_BODY]?.animation?.name || '')) greetPending = Date.now();   // the startup greeting began before this listener
-  Promise.resolve(api.assets()).then((idx) => { if (idx) assets = idx; assetsReady = true; flushGreet(); }).catch(noop);
+  Promise.resolve(api.assets()).then((idx) => { if (idx) { assets = idx; for (const [key, file] of Object.entries(idx.ui || {})) document.documentElement.style.setProperty('--game-' + key, 'url("' + clipUrl(file) + '")'); } assetsReady = true; flushGreet(); }).catch(noop);
 }
 api.onConfig((c) => {
   lifeCfg = { ...lifeCfg, ...c };
@@ -329,7 +336,7 @@ function nextBehavior() {
 // Walking: the rig's root motion moves the window (like the game's ParentRootMotionApplier).
 const WALK_SPEED = 2550;   // skeleton units / s, measured from left_casual_walk root motion
 function walk(dir) {
-  activity = 'walk'; walkDir = dir; walkLeft = 2.5 + Math.random() * 4; busy = true;
+  activity = 'walk'; walkCarry = 0; walkDir = dir; walkLeft = 2.5 + Math.random() * 4; busy = true;
   state.setEmptyAnimation(T_FACE, 0.2);
   state.setAnimation(T_BODY, dir < 0 ? 'left_casual_walk' : 'right_casual_walk', true);
 }
@@ -603,7 +610,11 @@ function lifeTick(dt) {
   else if (/^sit_casual_(idle|shake_leg|turnhead)$/.test(body)) skeleton.getRootBone().y = -SIT_DROP;
   else if (LIE_LOOPS.test(body)) skeleton.getRootBone().y = -(lieHold || lieRest());
   if (fadeIn < 1) { fadeIn = Math.min(1, fadeIn + dt / 0.35); skeleton.color.a = fadeIn; }
-  if (/_walk/.test(state.tracks[T_BODY]?.animation?.name || '')) skeleton.getRootBone().x = 0;   // root motion goes to the window, not the drawing
+  let walkingMix = false;
+  for (let entry = state.tracks[T_BODY]; entry; entry = entry.mixingFrom) {
+    if (/_walk/.test(entry.animation?.name || '')) walkingMix = true;
+  }
+  if (walkingMix) skeleton.getRootBone().x = skeleton.getRootBone().data.x;   // root motion goes to the window, not the drawing
   if (activity === 'walk') {
     const unitsPerCssPx = app.renderer.camera.zoom * (window.devicePixelRatio || 1);
     walkCarry += (WALK_SPEED * dt) / unitsPerCssPx * walkDir;
@@ -616,3 +627,14 @@ const facing = () => {   // the rig only walks facing left (mirror for right); t
   const n = state.tracks[T_BODY]?.animation?.name || '';
   return /^right_casual_walk/.test(n) ? -1 : n === 'stand_casual_up_left' ? pointDir : 1;
 };   // the rig only walks facing left; mirror for right
+
+// An explicit diagnostic never changes the user's mute preference or Windows volume.
+api.onTestVoice(async () => {
+  if (lifeCfg.voice === 'off') return show('Voice is off. Choose Japanese or Chinese in Settings > Voice, then test again.', 12000);
+  if (!assetsReady) return show('Voice files are still loading. Please try again in a moment.', 7000);
+  const suffix = lifeCfg.voice === 'cn' ? '_cn' : '_jp';
+  const file = Object.entries(assets.voice).find(([key]) => key.endsWith(suffix))?.[1];
+  if (!file) return show('No voice file was found for this language. Please prepare the game assets again.', 12000);
+  show('Playing a game voice. If you cannot hear it, check Windows mute, Volume mixer, and your output device.', 14000);
+  if ((await playClip(file)) === false) show('The voice could not play. Check the Lilith log for the audio error.', 12000);
+});

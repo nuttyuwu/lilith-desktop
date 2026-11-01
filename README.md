@@ -12,11 +12,11 @@
 <p align="center">
   <img alt="Windows x64" src="https://img.shields.io/badge/Windows-x64-8c7ae6?style=for-the-badge">
   <img alt="Local chat through Ollama" src="https://img.shields.io/badge/Chat-Ollama-c59cdb?style=for-the-badge">
-  <img alt="Private prerelease rc.3" src="https://img.shields.io/badge/Private_prerelease-rc.3-dba4c5?style=for-the-badge">
+  <img alt="Private prerelease rc.4" src="https://img.shields.io/badge/Private_prerelease-rc.4-dba4c5?style=for-the-badge">
 </p>
 
 <p align="center">
-  <a href="https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1-rc.3"><strong>Download Lilith</strong></a> ·
+  <a href="https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1-rc.4"><strong>Download Lilith</strong></a> ·
   <a href="#see-her-on-your-desktop">Demo gallery</a> ·
   <a href="#give-lilith-a-chat-model">Set up her chat model</a> ·
   <a href="#controls">Controls</a>
@@ -61,7 +61,7 @@ So I added Claude Code reactions, time and day awareness, Spotify controls, and 
 | Local conversation through Ollama and Llama 3.2. | Reactions to Claude Code activity and access to coding tools. | Time-aware reactions, outfits, and little moments throughout the day. |
 | [Set up the model](#give-lilith-a-chat-model) | [Integration details](#optional-integrations-and-local-data) | [Learn the controls](#controls) |
 
-> **Getting started:** install the original game → [download Lilith](https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1-rc.3) → click **Start** to prepare her assets. For generated chat, [install Ollama and the model](#give-lilith-a-chat-model).
+> **Getting started:** install the original game → [download Lilith](https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1-rc.4) → click **Start** to prepare her assets. For generated chat, [install Ollama and the model](#give-lilith-a-chat-model).
 
 ## What I added
 
@@ -76,7 +76,7 @@ The character, artwork, animations, and voices belong to the original game's cre
 
 ## Current status
 
-**Version `1.0.1-rc.3` — private prerelease.** The Windows builds include bundled asset preparation and startup guidance for the chat model. The earlier `rc.1` received focused manual checks for installation, launch, screen-edge placement, size changes, hook preference persistence, and quitting; those observations are not a clean-machine validation of this new setup flow.
+**Version `1.0.1-rc.4` — private prerelease.** The Windows builds include bundled asset preparation, chat-model guidance, smoother tuck/return movement, scaled-display movement corrections, game-style controls, and a voice playback check. The earlier `rc.1` received focused manual checks for installation, launch, screen-edge placement, size changes, hook preference persistence, and quitting; those observations are not a clean-machine validation of this new setup flow.
 
 This is still a work in progress. Clean-machine setup, audio, sleep/wake, multiple monitors, and a continuously observed long run need more testing. See the [release notes](CHANGELOG.md) and [validation record](docs/RELEASE.md) for the exact coverage.
 
@@ -94,7 +94,7 @@ The animated model, textures, voices, and dialogue are extracted from the player
 
 ## Install or run
 
-Download the current [private prerelease](https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1-rc.3). You must have access to this repository to view its files. The Windows binaries are unsigned.
+Download the current [private prerelease](https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1-rc.4). You must have access to this repository to view its files. The Windows binaries are unsigned.
 
 | File | Use |
 |---|---|
@@ -214,3 +214,7 @@ For a useful issue, include the app version, installer or portable build, Window
 This is an unofficial fan project, not affiliated with the game's developers or publisher. Buying or installing the game is not documented here as permission to redistribute its artwork or assets.
 
 The project depends on Esoteric Software's Spine runtime under its [Spine Runtimes License](https://esotericsoftware.com/spine-runtimes-license), with conditions referring to the [Spine Editor License Agreement](https://esotericsoftware.com/spine-editor-license). It is not an MIT-licensed dependency. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the included notices and outstanding distribution questions. The project's own package metadata remains `UNLICENSED` unless the rights holder chooses a source-code license. No new license grant is implied by this README.
+
+### If Lilith is silent
+
+Use **Voice** on her toolbar, or **Settings → Voice → Test voice** in the tray menu. Select Japanese or Chinese if her voice is off. If there is no playback error but you hear nothing, check Windows mute, Volume mixer, and the selected output device. The game’s recorded lines have voices; generated Ollama chat and setup notices are text-only, with no text-to-speech engine.

@@ -52,6 +52,7 @@ protocol.registerSchemesAsPrivileged([{ scheme: 'lilith', privileges: { standard
 
 let hookOnState = false, outfit = 'casual', tucked = false, fallTimer = null, demoOn = false, demoNormal = null;
 let win, tray, dragTimer = null, model = null, history = [], persona = '', chatAbort = null;
+let tuckMoveTimer = null;
 let floorDrop = 0, tuckCx = Infinity;   // tuckCx: her centre x when she tucked (which edge); floorDrop: px the window hangs below the floor while she lies there ('sit' with floor=true)
 let wins = [], perch = null, ollamaUp = null, lastReply = '', lastCwd = '';
 let size = { w: 0, h: 0 };   // the size we asked for; moves re-assert it (Windows grows windows moved with setPosition at 125%/150% scaling)
@@ -108,7 +109,7 @@ function horizontalBounds(b) {
 
 // Re-apply screen/size. setBounds twice: Windows mis-sizes the first move across monitors with different DPI.
 function setBounds(bounds) {
-  const b = tucked ? bounds : horizontalBounds(bounds);
+  const b = tucked || tuckMoveTimer ? bounds : horizontalBounds(bounds);
   size = { w: b.width, h: b.height }; win.setResizable(true); win.setBounds(b); win.setBounds(b); win.setResizable(false);
 }
 // Every move goes through here with the stored size: setPosition() on fractional-DPI screens makes the window creep bigger.
@@ -119,7 +120,7 @@ function moveTo(x, y, h = size.h) {
   win.setBounds(b);
 }
 function place() {
-  if (!win || dragTimer || fallTimer || demoNormal) return;   // don't yank her mid-drag/fall/demo frame when a DPI change fires
+  if (!win || dragTimer || fallTimer || demoNormal || tuckMoveTimer) return;   // don't yank her mid-drag/fall/demo frame when a DPI change fires
   if (perch || floorDrop) win.webContents.send('perch-gone');   // back on the floor: the renderer must stop sitting/lying on a window
   perch = null; floorDrop = 0;
   const { bounds, display } = currentLayout();
@@ -131,7 +132,8 @@ function fall() {
   clearInterval(fallTimer); perch = null;
   const wa = screen.getDisplayMatching(win.getBounds()).workArea, w = Math.min(size.w, wa.width), h = size.h;
   size.w = w;
-  let [x, y] = win.getPosition(), v = 0, last = Date.now();
+  let { x, y } = win.getBounds();
+  let v = 0, last = Date.now();
   x = settings.clampX(x, w, wa);
   const target = settings.landing(wins, x + w / 2, y + h, wa.y + wa.height);
   const floor = target.top - h, g = wa.height * 2.5;   // ~0.9 s for a full-screen drop
@@ -214,15 +216,31 @@ function sitBox(p) { const up = p.sitPx ? p.sitPx + Math.round(size.h * SIT_HEAD
 // Tuck away (Ctrl+Alt+C): peeks from a screen corner, ignores Claude/idle; app + Ollama keep running.
 function setTucked(on) {
   if (!win || dragTimer || fallTimer || tucked === on) return;
-  if (!on && autoTucked) { autoTucked = false; fullDismissed = true; }   // you brought her back mid-fullscreen: stays out until it ends
-  if (on) { const b = win.getBounds(); tuckCx = b.x + b.width / 2; }   // hide behind the edge she's nearer to
-  tucked = on; perch = null; buildMenu();
+  if (!on && autoTucked) { autoTucked = false; fullDismissed = true; }
+  const from = win.getBounds();
+  if (on) tuckCx = from.x + from.width / 2;
+  clearInterval(tuckMoveTimer);
+  tucked = on; perch = null; floorDrop = 0; buildMenu();
   const { bounds, display } = currentLayout(), wa = display.workArea;
-  const target = on ? settings.tuckBounds(screen.getAllDisplays(), display, bounds.width, bounds.height, tuckCx) : bounds;
-  win.webContents.send('tuck', { on, side: target.x + target.width / 2 < wa.x + wa.width / 2 ? 'left' : 'right' });
-  clearTimeout(tuckGoT);   // the renderer plays her hide / peek-out first, then a sparkle and 'tuck-go': the window jumps
-  tuckGoT = setTimeout(() => { if (tucked === on) place(); }, 6000);
-  tuckGoOn = on;
+  const peek = settings.tuckBounds(screen.getAllDisplays(), display, bounds.width, bounds.height, tuckCx);
+  const target = on ? peek : bounds;
+  const side = peek.x + peek.width / 2 < wa.x + wa.width / 2 ? 'left' : 'right';
+  win.webContents.send('tuck', { on, side });
+  // Move the window continuously. The game's peek_end moves its drawing out of
+  // view; waiting for it and then teleporting the window made returning disappear.
+  const started = Date.now();
+  win.setResizable(true);
+  tuckMoveTimer = setInterval(() => {
+    if (!win || win.isDestroyed()) { clearInterval(tuckMoveTimer); tuckMoveTimer = null; return; }
+    const t = Math.min(1, (Date.now() - started) / 480), eased = t * t * (3 - 2 * t);
+    const next = {};
+    for (const key of ['x', 'y', 'width', 'height']) next[key] = Math.round(from[key] + (target[key] - from[key]) * eased);
+    size = { w: next.width, h: next.height }; win.setBounds(next);
+    if (t === 1) {
+      clearInterval(tuckMoveTimer); tuckMoveTimer = null;
+      place(); win.webContents.send('tuck-complete', { on });
+    }
+  }, 1000 / 60);
 }
 
 // q = render quality (pet.js textureScale): textures are sized for the window when the page loads
@@ -240,6 +258,7 @@ function createWindow() {
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, autoplayPolicy: 'no-user-gesture-required',
       backgroundThrottling: false },   // tucked mostly off-screen, Windows can treat her as hidden and throttle her to ~1 fps: choppy loop, late sparkles
   });
+  setBounds(bounds);   // normalise Windows' initial frame rounding before the first walk
   win.setAlwaysOnTop(cfg.alwaysOnTop, 'screen-saver');
   win.setIgnoreMouseEvents(true, { forward: true });
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
@@ -565,7 +584,7 @@ app.whenReady().then(async () => {
     buildMenu(); if (!win) return;
     const b = win.getBounds(), cx = b.x + b.width / 2, feet = b.y + b.height - 2;
     if (tucked || !screen.getAllDisplays().some((d) => cx >= d.bounds.x && cx < d.bounds.x + d.bounds.width && feet >= d.bounds.y && feet < d.bounds.y + d.bounds.height)) place();
-    if (!tucked && !dragTimer && !fallTimer) {
+    if (!tucked && !tuckMoveTimer && !dragTimer && !fallTimer) {
       const now = win.getBounds(), safe = horizontalBounds(now);
       if (safe.x !== now.x || safe.width !== now.width) moveTo(safe.x, now.y, now.height);
     }
@@ -628,7 +647,8 @@ function buildMenu() {
         { type: 'separator' }, ...screens] },
       { label: T('m.size'), submenu: sizes },
       { label: T('m.language', { l: langName(cfg.lang) }), submenu: availableLangs().map(([t, l]) => ({ label: l, type: 'radio', checked: cfg.lang === t, click: () => setLang(t) })) },
-      { label: T('m.voice'), submenu: voices },
+      { label: T('m.voice'), submenu: [...voices, { type: 'separator' },
+        { label: 'Test voice', click: () => { setTucked(false); win.webContents.send('test-voice'); } }] },
       { label: T('m.quality'), submenu: ['auto', 'high', 'low'].map((q) => ({ label: T(`q.${q}`), type: 'radio', checked: (cfg.quality || 'auto') === q,
         click: () => { cfg.quality = q; saveCfg(); buildMenu(); win.loadURL(pageUrl()); } })) },
       { label: cfg.profile ? T('m.aboutName', { name: cfg.profile.name }) : T('m.about'), click: () => { setTucked(false); win.webContents.send('setup'); } },
@@ -676,8 +696,6 @@ handlePet('desk', () => {
   let user = ''; try { user = os.userInfo().username; } catch {}
   return { count: any ? count : null, user };
 });
-let tuckGoT = 0, tuckGoOn = false;
-onPet('tuck-go', () => { if (!tuckGoT) return; clearTimeout(tuckGoT); tuckGoT = 0; setTimeout(() => { if (tucked === tuckGoOn) place(); }, 90); });
 // Sitting on a window's title bar: the window drops by the leg length so her legs can dangle over the window.
 onPet('sit', (_e, px, floor) => {
   const none = () => win.webContents.send('sit-moved', { ok: false, up: 0 });
@@ -685,7 +703,7 @@ onPet('sit', (_e, px, floor) => {
   if (!perch) {   // lying on the floor (floor=true): the window hangs over the taskbar edge by px so her hand and hair aren't cut
     if (!floor) return none();
     const wa = screen.getDisplayMatching(win.getBounds()).workArea, drop = floorDrop = Math.max(0, Math.round(px));
-    moveTo(win.getPosition()[0], wa.y + wa.height - size.h + drop);
+    moveTo(win.getBounds().x, wa.y + wa.height - size.h + drop);
     return win.webContents.send('sit-moved', { ok: drop > 0, up: 0 });
   }
   const r = wins.find((o) => o.id === perch.id); if (!r) return none();
@@ -696,7 +714,10 @@ onPet('sit', (_e, px, floor) => {
   win.webContents.send('sit-moved', { ok: perch.sitPx > 0, up, low });   // up: CSS px of extra headroom, the renderer keeps its scale
 });
 // hover bar: Claude / ChatGPT, or Spotify transport (music-*). Hide + Demo live in the tray.
-onPet('toolbar', (_e, a) => { if (typeof a === 'string') return a.startsWith('music-') ? music(a.slice(6)) : launch(a); });
+onPet('toolbar', (_e, a) => {
+  if (a === 'test-voice') return win.webContents.send('test-voice');
+  if (typeof a === 'string') return a.startsWith('music-') ? music(a.slice(6)) : launch(a);
+});
 
 // ---------- Spotify (spotify.js): transport controls, "now playing", and listen-along ----------
 // action: toggle | next | prev | now. Her bubble shows what's playing afterwards.
@@ -740,23 +761,35 @@ onPet('save-profile', (_e, p) => {
 // Game voices on disk: { voice: {'1000206_jp': 'voice/1000206_jp.wav'}, sfx: {'ShyGiggle': 'sfx/ShyGiggle.wav'} }
 // (tolerates the doubled '.wav.wav' names older extractor runs produced)
 function assetIndex() {
-  const idx = { voice: {}, sfx: {} };
+  const idx = { voice: {}, sfx: {}, ui: {} };
   for (const k of ['voice', 'sfx']) {
     try { for (const f of fs.readdirSync(path.join(RIP, k))) idx[k][f.replace(/(\.wav)+$/i, '')] = `${k}/${f}`; }
     catch (e) { log('assets', k, e.message); }
   }
+  try {
+    const sprites = fs.readdirSync(path.join(RIP, 'sprites'));
+    for (const [key, name] of Object.entries({ bubble: 'Choise_Bubble', panel: 'Settings_Bg_FixSize', music: 'music_panel_bg' })) {
+      const file = sprites.find(f => new RegExp('^' + name + '_[0-9]+\\.png$').test(f));
+      if (file) idx.ui[key] = `sprites/${file}`;
+    }
+  } catch (e) { log('UI assets', e.message); }
   log('voices', Object.keys(idx.voice).length, 'sfx', Object.keys(idx.sfx).length);
   return idx;
 }
 
-// Walking: the renderer sends root-motion steps; she stops at the screen edge.
+// Walking: getBounds/setBounds use the same outer-window coordinates. On Windows
+// with fractional scaling getPosition can differ by frame pixels, accumulating drift.
+// The renderer sends root-motion steps; she stops at the screen edge.
 onPet('walk-step', (_e, dx) => {
-  if (!win || dragTimer || fallTimer || tucked || demoNormal || perch) return win?.webContents.send('walk-blocked');
+  if (!win || dragTimer || fallTimer || tucked || tuckMoveTimer || demoNormal || perch) {
+    log.once('walk-state', 'walk blocked by state', JSON.stringify({drag:!!dragTimer,fall:!!fallTimer,tucked,transition:!!tuckMoveTimer,framed:!!demoNormal,perched:!!perch}));
+    return win?.webContents.send('walk-blocked');
+  }
   if (!Number.isFinite(dx)) return win.webContents.send('walk-blocked');
-  const [x, y] = win.getPosition(), wa = screen.getDisplayMatching(win.getBounds()).workArea;
-  const nx = settings.clampX(x + dx, size.w, wa);
+  const bounds = win.getBounds(), { x, y } = bounds, wa = screen.getDisplayMatching(bounds).workArea;
+  const nx = settings.clampX(x + dx, win.getBounds().width, wa);
   moveTo(nx, y);
-  if (nx !== x + dx) win.webContents.send('walk-blocked');
+  if (dx < 0 ? nx <= wa.x : nx >= wa.x + wa.width - bounds.width) { log.once('walk-edge', 'walk reached edge', JSON.stringify({x,dx,nx,width:win.getBounds().width,area:wa})); win.webContents.send('walk-blocked'); }
   cfg.pos = { display: screen.getDisplayMatching(win.getBounds()).id, x: nx, y }; clearTimeout(walkSave); walkSave = setTimeout(saveCfg, 1000);
 });
 let walkSave = 0;
@@ -809,18 +842,18 @@ onPet('demo-frame', (_e, size) => {   // wide poses (sofa/lying) get a wider win
 });
 onPet('demo-drop', () => {   // lift her up, then let gravity do the rest
   if (tucked || demoNormal) return win.webContents.send('landed');
-  const [x, y] = win.getPosition(), wa = screen.getDisplayMatching(win.getBounds()).workArea;
+  const bounds = win.getBounds(), { x, y } = bounds, wa = screen.getDisplayMatching(bounds).workArea;
   moveTo(x, Math.max(wa.y, y - Math.round(wa.height * 0.35)));
   setTimeout(fall, 350);
 });
 
 // Drag follows the OS cursor so fast moves never "lose" the window.
 onPet('drag-start', () => {
-  if (tucked) return;
+  if (tucked || tuckMoveTimer) return;
   perch = null; floorDrop = 0;
   clearInterval(fallTimer); fallTimer = null;   // catching her mid-fall
   if (demoNormal) { const b = demoNormal; demoNormal = null; setBounds(b); }   // leaving the sofa/bed frame
-  const start = screen.getCursorScreenPoint(), [wx, wy] = win.getPosition();
+  const start = screen.getCursorScreenPoint(), { x: wx, y: wy } = win.getBounds();
   clearInterval(dragTimer);
   dragTimer = setInterval(() => {
     const p = screen.getCursorScreenPoint();

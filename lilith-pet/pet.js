@@ -396,7 +396,8 @@ function layoutUi() {
   const barTop = Math.max(2, Math.round(head - bar.offsetHeight * s - 4));
   bar.style.top = `${barTop}px`;
   if (!bubble.classList.contains('show')) return;
-  const bottom = barTop - 3, h = Math.min(bubble.scrollHeight + 2, Math.max(bottom - 4, innerHeight * 0.45));
+  const border = bubble.offsetHeight - bubble.clientHeight;
+  const bottom = barTop - 3, h = Math.min(bubble.scrollHeight + border + 2, Math.max(bottom - 4, innerHeight * 0.45));
   const top = Math.round(Math.max(4, bottom - h));
   bubble.style.maxHeight = `${Math.round(h)}px`;
   bubble.style.top = `${top}px`;
@@ -477,27 +478,28 @@ function tuckPose() {
 // Tucked on the right edge = mirrored so she faces into the screen; lean toward the visible side so both eyes show.
 const LEAN_DEG = 12, LEAN_SHIFT = 220;   // deg, skeleton units toward the hidden side
 let tuckSide = 'right', lean = 0;
-// Casual: she leaves with the rig's stand_casual_hide and comes back out with stand_casual_peek_end (still at the edge);
-// then a sparkle while main moves the window (main waits for tuckGo, 6 s at most).
-let tuckSeq = 0, tuckLeaving = false;
+// Main slides the window while she holds a visible pose, then releases the greeting.
+let tuckLeaving = false;
 api.onTuck((v) => {
   const on = typeof v === 'object' ? v.on : v;
   if (typeof v === 'object' && v.side) tuckSide = v.side;
-  tucked = on; perched = false;   // tuck/untuck re-places the window: off any title bar
-  if (!data) return api.tuckGo?.();
-  const seq = ++tuckSeq; let gone = false;
-  const go = () => {
-    if (gone || seq !== tuckSeq) return; gone = true; tuckLeaving = false;
-    poof(); api.tuckGo?.();   // main moves the window while she's hidden
-    lean = on ? LEAN_DEG : 0; const root = skeleton.getRootBone(); root.rotation = -lean; root.x = on ? -LEAN_SHIFT : 0;   // no visible lean in/out
-    if (on) tuckPose(); else { state.setEmptyAnimation(T_FACE, 0); play(outfit.greet); }
-  };
-  if (on) { endActivity(false); closeChat(); bar.classList.remove('show'); bubble.className = ''; }
-  const anim = on ? 'stand_casual_hide' : 'stand_casual_peek_end';
-  if (demoing || dragging || outfit !== OUTFITS.casual || !data.findAnimation(anim)) return go();
-  busy = true; tuckLeaving = !on;   // coming out: stays mirrored / leaned at the edge until the window moves
-  state.setEmptyAnimation(T_FACE, 0.2);
-  state.setAnimation(T_BODY, anim, false).listener = { complete: go, interrupt: go };
+  tucked = on; perched = false; tuckLeaving = !on;
+  if (!data) return;
+  endActivity(false); stopChain(); closeChat();
+  bar.classList.remove('show'); bubble.className = '';
+  busy = true;
+  state.setEmptyAnimation(T_FACE, 0.15);
+  state.setEmptyAnimation(T_MOUTH, 0.15);
+  if (on) tuckPose(); else state.setAnimation(T_BODY, outfit.idle, true);
+});
+api.onTuckComplete(({ on }) => {
+  if (on !== tucked) return;
+  tuckLeaving = false;
+  if (!data) return;
+  if (!on) {
+    lean = 0; const root = skeleton.getRootBone(); root.rotation = 0; root.x = root.data.x;
+    play(outfit.greet);
+  }
 });
 // Private windows in front (password managers, private browsing, sign-in pages; main + apps.js): she turns her back
 // (the game's SecretHide, stand_casual_back_prepare -> stand_casual_back) until you leave it.

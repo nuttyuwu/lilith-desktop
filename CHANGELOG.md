@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1-rc.4 — private prerelease
+
+- Replace the delayed tuck/return teleport with a continuous window slide, keeping Lilith visible during return.
+- Use consistent outer-window coordinates for walking, dragging and falling on scaled Windows displays; retain walking root-motion cancellation through animation blends.
+- Match the game’s star dialogue bubbles and checkerboard panels using UI sprites from the player’s extracted assets, with a CSS fallback.
+- Add a Voice button and Settings > Voice > Test voice, report playback failures, and bound audio-output resume waits. Windows mute and user voice preferences remain under user control.
+- The user reports successful rc.3 installation on a second desktop. Six extraction audio-format warnings and reported silence remain distinct from a verified audio-device diagnosis. Generated chat has no text-to-speech.
+
 ## 1.0.1-rc.3 — private prerelease
 
 - Document the model actually used, Llama 3.2 (`llama3.2:latest`), with official Ollama and model links and the download command.

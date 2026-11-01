@@ -2,7 +2,17 @@
 
 Target repository: `nuttyuwu/lilith-desktop`.
 
-Target candidate: `1.0.1-rc.3`. This adds Llama 3.2 setup documentation and startup model guidance. This adds a bundled Python/UnityPy extractor and retryable game discovery. Python 3.12 with the Windows launcher is required on the build machine only. Clean-machine setup and retry dialogs remain pending manual verification. The status table and detailed observations below describe the earlier `rc.1` unless explicitly noted. The GitHub release bundle is prepared locally, with bounded candidate observations recorded below. Public publication remains blocked by unanswered artwork and Spine distribution questions. Neither a GitHub upload nor a public release is claimed.
+Target candidate: `1.0.1-rc.4`. Private GitHub prerelease with movement corrections, game-style UI textures loaded from the player's assets, and explicit voice diagnostics. Existing status rows below describe earlier candidates unless noted. Public distribution decisions remain unresolved.
+
+## rc.4 observations
+
+- User reports rc.3 installed successfully on another Windows desktop, with silent audio and six extraction audio-format warnings. This is user-reported installation evidence, not an independently observed clean-machine or audible-output check.
+- Inspected the actual rig: `stand_casual_peek_end` lasts four seconds and moves the character sideways out of view; the old app waited before teleporting its window. The new path slides the window over 480 ms with a visible pose.
+- Manual Windows preview: tuck and return remained visible, the original star bubble appeared, walking left moved across the desktop, and the voice test displayed its diagnostic message. Runtime observation showed an audio source started and the AudioContext running; physical speaker output was not heard/verified.
+- Scaled Windows initial bounds needed correction before walking. Movement now uses getBounds/setBounds consistently, normalises the initial window, and only stops at the boundary in the direction of travel. Walking root translation is also suppressed while outgoing walk animations blend into other poses.
+- Packaged unpacked rc.4 application launched with the existing medium/high-quality profile; manual tuck/return remained visible and returned fully on-screen, and the new toolbar Voice button displayed its diagnostic bubble. This is a packaged-runtime check, not a repeat of fresh installation.
+- Manual current-user installer upgrade completed from the previous installed version to rc.4, followed by launch and visible character rendering. Installed version metadata and all five changed runtime files matched source. This is an in-place upgrade using existing assets/preferences, not a fresh-machine install.
+- No automated test suite was run. Multi-monitor/DPI combinations, all outfits and sizes, physical audio output, and the six unsupported audio clips remain outside this focused check.
 
 ## Current status
 
