@@ -1,0 +1,94 @@
+{
+  "name": "lilith-pet",
+  "version": "1.0.1-rc.2",
+  "description": "Lilith from The NOexistenceN of Lilith as a desktop companion (unofficial fan project, assets read from your own copy)",
+  "private": true,
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nuttyuwu/lilith-desktop.git"
+  },
+  "homepage": "https://github.com/nuttyuwu/lilith-desktop#readme",
+  "bugs": {
+    "url": "https://github.com/nuttyuwu/lilith-desktop/issues"
+  },
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "npm run extractor:build && electron-builder --win nsis portable --x64",
+    "release:prepare": "node ../scripts/prepare-release.cjs",
+    "extractor:build": "python ../scripts/build-extractor.py"
+  },
+  "dependencies": {
+    "@esotericsoftware/spine-webgl": "4.2.43"
+  },
+  "devDependencies": {
+    "electron": "45.2.1",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "fan.lilith.desktop-pet",
+    "productName": "Lilith",
+    "asar": false,
+    "files": [
+      "*.js",
+      "*.ps1",
+      "index.html",
+      "package.json",
+      "icon.png"
+    ],
+    "extraResources": [
+      {
+        "from": "../extract_lilith.py",
+        "to": "extract/extract_lilith.py"
+      },
+      {
+        "from": "../lilith_text.py",
+        "to": "extract/lilith_text.py"
+      },
+      {
+        "from": "../THIRD_PARTY_NOTICES.md",
+        "to": "THIRD_PARTY_NOTICES.md"
+      },
+      {
+        "from": "build/extractor/lilith-extractor",
+        "to": "extractor"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Lilith",
+      "artifactName": "Lilith Setup ${version}.exe",
+      "deleteAppDataOnUninstall": false
+    },
+    "portable": {
+      "artifactName": "Lilith.exe"
+    },
+    "directories": {
+      "output": "dist"
+    },
+    "publish": null
+  }
+}

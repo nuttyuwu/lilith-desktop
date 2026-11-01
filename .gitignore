@@ -1,0 +1,66 @@
+# Installed dependencies and build output
+node_modules/
+dist/
+.cache/
+coverage/
+playwright-report/
+test-results/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local release staging, binaries, and archives
+/release/
+/releases/
+/release-staging/
+/release-output/
+/artifacts/
+*.exe
+*.msi
+*.blockmap
+*.zip
+*.7z
+/lilith-pet/build/icon-1024.png
+/lilith-pet/build/extractor/
+
+# Private QA material, backups, and runtime state
+/tests/manual/
+*.log
+*.log.old
+*.bak
+*.tmp
+settings.json
+day.json
+Local Storage/
+Session Storage/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+
+# Game dumps and extracted data; never include them in public source
+/dump/
+/LilithRip/
+/rip/
+*.skel
+*.atlas
+*.assets
+*.resS
+*.resource
+*.wav
+*.ogg
+*.mp3
+
+# Python and editor/OS files
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
