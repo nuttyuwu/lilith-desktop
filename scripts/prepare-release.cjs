@@ -34,7 +34,8 @@ if (JSON.stringify(packedPkg.dependencies) !== JSON.stringify(pkg.dependencies))
 const sourceFiles = [
   '.gitignore', '.gitattributes', '.github/workflows/windows-build.yml',
   'README.md', 'CHANGELOG.md', 'CONTRIBUTING.md', 'THIRD_PARTY_NOTICES.md', 'docs/RELEASE.md',
-  'docs/images/lilith-hero.jpg', 'docs/images/lilith-greeting.jpg', 'docs/images/lilith-chat.jpg',
+  'docs/images/lilith-hero.png', 'docs/images/lilith-greeting.png', 'docs/images/lilith-chat.png',
+  'docs/images/lilith-in-action.gif',
   'extract_lilith.py', 'lilith_text.py', 'scripts/prepare-release.cjs',
   'scripts/build-extractor.py', 'scripts/extractor-notices.py', 'scripts/extractor-requirements.txt',
   'lilith-pet/index.html', 'lilith-pet/package.json', 'lilith-pet/package-lock.json',

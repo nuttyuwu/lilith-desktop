@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/images/lilith-hero.jpg" alt="Lilith running on a purple demo desktop beside the words A little company. A little mischief." width="100%">
+  <img src="docs/images/lilith-hero.png" alt="Lilith rendered against a purple demo backdrop beside the words A little company. A little mischief." width="100%">
 </p>
 
 <h1 align="center">✦ Lilith Desktop ✦</h1>
@@ -38,14 +38,21 @@ So I added Claude Code reactions, time and day awareness, Spotify controls, and 
 
 ## See her on your desktop
 
+<p align="center">
+  <img src="docs/images/lilith-in-action.gif" alt="Lilith greets you, giggles, waves, casts magic, and claps in a looping animation demo" width="500"><br>
+  <strong>A little hello. A little magic. A lot of personality.</strong>
+</p>
+
+*Silent animation showcase captured frame by frame from the app's renderer, with a staged backdrop and captions. These are Lilith's actual character animations; the captions are demo text, not generated chat replies.*
+
 <table>
   <tr>
-    <td align="center" width="50%"><img src="docs/images/lilith-greeting.jpg" alt="Lilith in her casual outfit saying Were you waiting for me?" width="350"><br><strong>A familiar face</strong><br>Animated expressions, little greetings, and the original character's charm.</td>
-    <td align="center" width="50%"><img src="docs/images/lilith-chat.jpg" alt="Lilith with her chat input, Claude and GPT buttons, and music controls visible" width="350"><br><strong>More ways to interact</strong><br>Open chat, reach your coding tools, and control music from her compact interface.</td>
+    <td align="center" width="50%"><img src="docs/images/lilith-greeting.png" alt="Lilith in her casual outfit saying Were you waiting for me?" width="350"><br><strong>A familiar face</strong><br>Animated expressions, little greetings, and the original character's charm.</td>
+    <td align="center" width="50%"><img src="docs/images/lilith-chat.png" alt="Lilith with her chat input, Claude and GPT buttons, and music controls visible" width="350"><br><strong>More ways to interact</strong><br>Open chat, reach your coding tools, and control music from her compact interface.</td>
   </tr>
 </table>
 
-*Real screenshots of the running Windows app, captured against a staged demo backdrop. The dialogue shown comes from the game; these captures do not demonstrate a generated LLM reply. Character artwork belongs to the original game's creators.*
+*Cursor-free, lossless PNG captures from the app's renderer, with a staged backdrop and demo dialogue. Click an image to view it at full resolution. Character artwork and animations belong to the original game's creators.*
 
 ## Make yourself at home
 
