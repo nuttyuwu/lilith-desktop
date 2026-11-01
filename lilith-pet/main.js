@@ -367,6 +367,22 @@ function copyLog() {
   notice(T('logCopied'), { ms: 4000 });
 }
 function notice(text, { ms = 6000, action = null, anim = null } = {}) { win?.webContents.send('notice', { text, ms, action, anim }); }
+const MODEL_SETUP_URL = 'https://github.com/nuttyuwu/lilith-desktop#give-lilith-a-chat-model';
+async function showModelSetupIfNeeded() {
+  if (!(await refreshOllama())) {
+    notice(T('ollama.setup'), { ms: 0, action: `open:${MODEL_SETUP_URL}`, anim: 'confuse' });
+    return;
+  }
+  try { await ensureModel(); }
+  catch (e) {
+    log('ollama setup', e.message);
+    if (/no models/i.test(e.message)) {
+      notice(T('ollama.noModel', { cmd: ollama.MODEL_COMMAND }), { ms: 0, action: `copy:${ollama.MODEL_COMMAND}`, anim: 'confuse' });
+    } else {
+      notice(T(/not found/i.test(e.message) ? 'ollama.modelSetup' : 'ollama.checkFailed'), { ms: 0, action: `open:${MODEL_SETUP_URL}`, anim: 'confuse' });
+    }
+  }
+}
 
 async function refreshOllama() {
   const up = await ollama.ping();
@@ -410,7 +426,9 @@ async function speak(userText, kind = 'chat') {
     log('ollama', e.message);
     if (/no models/i.test(e.message)) {
       model = null;
-      notice(T('ollama.noModel', { cmd: 'ollama pull llama3.1:8b' }), { ms: 0, action: 'copy:ollama pull llama3.1:8b', anim: 'confuse' });
+      notice(T('ollama.noModel', { cmd: ollama.MODEL_COMMAND }), { ms: 0, action: `copy:${ollama.MODEL_COMMAND}`, anim: 'confuse' });
+    } else if (/Configured model not found/i.test(e.message)) {
+      notice(T('ollama.modelSetup'), { ms: 0, action: `open:${MODEL_SETUP_URL}`, anim: 'confuse' });
     } else if (/not found/i.test(e.message) && model) {
       notice(T('ollama.modelGone', { m: model }), { ms: 8000 }); model = null;
     } else win.webContents.send('say-error', T('ollama.lost', { e: e.message }));
@@ -494,7 +512,7 @@ app.whenReady().then(async () => {
     sendConfig();
     startWindowWatcher();
     setTimeout(async () => {
-      if (!(await refreshOllama())) notice(T('ollama.off'), { ms: 7000 });
+      await showModelSetupIfNeeded();
     }, 5000);
   });
   setInterval(refreshOllama, 20000);

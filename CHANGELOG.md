@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1-rc.3 — private prerelease
+
+- Document the model actually used, Llama 3.2 (`llama3.2:latest`), with official Ollama and model links and the download command.
+- At launch, show a clickable model-setup speech bubble when Ollama is unavailable or no chat model is installed. Ready installations are not prompted to reinstall.
+- Correct the old Llama 3.1 suggestion, prefer installed Llama 3.2 after a named Lilith model, check configured model availability, and bound model discovery to three seconds.
+- Setup messages are displayed as text; they do not synthesize new voice audio. No automatic model download is performed.
+
 ## 1.0.1-rc.2 — unreleased
 
 - Bundle the asset extractor and its Python dependencies in both Windows builds. End users no longer need Python, pip, or an extraction-time dependency download.

@@ -1,13 +1,21 @@
 // Minimal Ollama client: model pick + streaming /api/chat (NDJSON).
 const BASE = (process.env.LILITH_OLLAMA || 'http://127.0.0.1:11434').replace(/\/+$/, '');
+const RECOMMENDED_MODEL = 'llama3.2:latest';
+const MODEL_COMMAND = `ollama pull ${RECOMMENDED_MODEL}`;
 
 async function pickModel() {
-  if (process.env.LILITH_MODEL) return process.env.LILITH_MODEL;
-  const r = await fetch(`${BASE}/api/tags`);
+  const r = await fetch(`${BASE}/api/tags`, { signal: AbortSignal.timeout(3000) });
   if (!r.ok) throw new Error(`Ollama /api/tags ${r.status}`);
   const names = (await r.json()).models.map((m) => m.name);
-  if (!names.length) throw new Error('Ollama has no models. Run: ollama pull llama3.1:8b');
-  return names.find((n) => /lilith/i.test(n)) || names.find((n) => !/embed/i.test(n)) || names[0];
+  if (process.env.LILITH_MODEL) {
+    const requested = process.env.LILITH_MODEL;
+    const normalized = requested.includes(':') ? requested : `${requested}:latest`;
+    if (!names.some((n) => n === requested || n === normalized)) throw new Error(`Configured model not found: ${requested}`);
+    return requested;
+  }
+  const chatNames = names.filter((n) => !/embed/i.test(n));
+  if (!chatNames.length) throw new Error(`Ollama has no models for chat. Run: ${MODEL_COMMAND}`);
+  return chatNames.find((n) => /lilith/i.test(n)) || chatNames.find((n) => n === RECOMMENDED_MODEL) || chatNames[0];
 }
 
 // onToken(text) per chunk; resolves with the full reply.
@@ -51,4 +59,4 @@ function launch() {
   });
 }
 
-module.exports = { pickModel, chat, ping, launch, BASE };
+module.exports = { pickModel, chat, ping, launch, BASE, RECOMMENDED_MODEL, MODEL_COMMAND };

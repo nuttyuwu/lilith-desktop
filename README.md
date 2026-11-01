@@ -23,7 +23,7 @@ The character, artwork, animations, and voices belong to the original game's cre
 
 ## Current status
 
-**Version `1.0.1-rc.2` — local prerelease candidate.** This candidate adds bundled asset preparation. The earlier `rc.1` received focused manual checks for installation, launch, screen-edge placement, size changes, hook preference persistence, and quitting; those observations are not a clean-machine validation of this new setup flow.
+**Version `1.0.1-rc.3` — local prerelease candidate.** This candidate adds bundled asset preparation. The earlier `rc.1` received focused manual checks for installation, launch, screen-edge placement, size changes, hook preference persistence, and quitting; those observations are not a clean-machine validation of this new setup flow.
 
 This is still a work in progress. Clean-machine setup, audio, sleep/wake, multiple monitors, and a continuously observed long run need more testing. See the [release notes](CHANGELOG.md) and [validation record](docs/RELEASE.md) for the exact coverage.
 
@@ -73,6 +73,25 @@ If an instance is already running, launching again brings that instance back int
 
 The tray also controls app awareness, fullscreen hiding, day/night behavior, chatter frequency, and whether she stays on top. Audio, the full animation reel, and other unobserved behavior remain NOT TESTED; see the release notes for the exact coverage.
 
+## Give Lilith a chat model
+
+The model used with this project is **Llama 3.2 (`llama3.2:latest`) through Ollama**. The game provides Lilith's existing voice clips and reactions; the local language model lets her generate new chat replies.
+
+1. [Download Ollama for Windows](https://ollama.com/download/windows), install it, and open it.
+2. Open PowerShell and download the model:
+
+   ```powershell
+   ollama pull llama3.2:latest
+   ```
+
+3. Wait for the download to finish, then talk to Lilith with **Ctrl+Alt+L**. If she is already running, try chatting again; reinstalling Lilith is unnecessary.
+
+[Model download page and details](https://ollama.com/library/llama3.2). The default model currently has 3 billion parameters and a download of about 2 GB. The model download needs internet access; once installed, chat uses the local Ollama service by default.
+
+At launch, Lilith checks whether her chat backend and a model are available. If Ollama is unavailable, her speech bubble offers this setup guide. If Ollama is running without a chat model, she says, “In order for me to chat with you, please install the Llama 3.2 model,” and clicking the bubble copies the download command. This is an on-screen setup message, not newly synthesized voice audio.
+
+If Ollama is already installed but stopped, open it or try chatting so Lilith can attempt to start it. For a custom `LILITH_OLLAMA` endpoint, make sure that server is reachable and has the model installed. `LILITH_MODEL` can select another installed model; otherwise Lilith prefers an installed model named Lilith, then `llama3.2:latest`, then another non-embedding model. Basic pet animations and recorded reactions still work without a language model.
+
 ## Optional integrations and local data
 
 | Location or service | What it is used for |
@@ -108,7 +127,7 @@ cd lilith-pet
 npm run release:prepare
 ```
 
-This command rebuilds both x64 executables with publishing disabled, checks the packaged runtime and source against the pinned inputs, and assembles an allowlisted source archive, manifests, release notes, and SHA-256 checksums under `release/v1.0.1-rc.2/`. The build outputs also remain in `lilith-pet/dist/`. Building downloads Electron and packaging tools if they are not cached. The command does not upload anything; a successful build does not replace the manual checks in [Release preparation](docs/RELEASE.md).
+This command rebuilds both x64 executables with publishing disabled, checks the packaged runtime and source against the pinned inputs, and assembles an allowlisted source archive, manifests, release notes, and SHA-256 checksums under `release/v1.0.1-rc.3/`. The build outputs also remain in `lilith-pet/dist/`. Building downloads Electron and packaging tools if they are not cached. The command does not upload anything; a successful build does not replace the manual checks in [Release preparation](docs/RELEASE.md).
 
 Use the candidate's `SHA256SUMS.txt` and `BUILD_INFO.json` for exact artifact hashes and build information. The GitHub Actions workflow runs only when manually dispatched. It saves a candidate artifact for review and does not publish a GitHub release or run the automated test suite.
 

@@ -2,7 +2,7 @@
 
 Target repository: `nuttyuwu/lilith-desktop`.
 
-Target candidate: `1.0.1-rc.2`. This adds a bundled Python/UnityPy extractor and retryable game discovery. Python 3.12 with the Windows launcher is required on the build machine only. Clean-machine setup and retry dialogs remain pending manual verification. The status table and detailed observations below describe the earlier `rc.1` unless explicitly noted. The GitHub release bundle is prepared locally, with bounded candidate observations recorded below. Public publication remains blocked by unanswered artwork and Spine distribution questions. Neither a GitHub upload nor a public release is claimed.
+Target candidate: `1.0.1-rc.3`. This adds Llama 3.2 setup documentation and startup model guidance. This adds a bundled Python/UnityPy extractor and retryable game discovery. Python 3.12 with the Windows launcher is required on the build machine only. Clean-machine setup and retry dialogs remain pending manual verification. The status table and detailed observations below describe the earlier `rc.1` unless explicitly noted. The GitHub release bundle is prepared locally, with bounded candidate observations recorded below. Public publication remains blocked by unanswered artwork and Spine distribution questions. Neither a GitHub upload nor a public release is claimed.
 
 ## Current status
 
@@ -38,11 +38,11 @@ npm ci
 npm run release:prepare
 ```
 
-The preparation script always builds both the NSIS installer and portable executable with `--publish never`. It then verifies packaged source, extra resources, dependency versions, and the packaged Electron version before assembling an allowlisted source archive. It writes the two executables, source archive, `SOURCE_MANIFEST.json`, `BUILD_INFO.json`, `RELEASE_NOTES.md`, and `SHA256SUMS.txt` under `release/v1.0.1-rc.2/`. It does not upload or publish anything.
+The preparation script always builds both the NSIS installer and portable executable with `--publish never`. It then verifies packaged source, extra resources, dependency versions, and the packaged Electron version before assembling an allowlisted source archive. It writes the two executables, source archive, `SOURCE_MANIFEST.json`, `BUILD_INFO.json`, `RELEASE_NOTES.md`, and `SHA256SUMS.txt` under `release/v1.0.1-rc.3/`. It does not upload or publish anything.
 
 Use the generated `BUILD_INFO.json`, `SOURCE_MANIFEST.json`, and `SHA256SUMS.txt` for exact artifact identities, sizes, source-file inventory, and build versions. Do not embed a source-archive hash inside documentation contained in that same archive. Electron `45.2.1` and electron-builder `26.18.0` are pinned; the observed local build used Node.js `24.18.1`. Do not substitute successful compilation, packaging, or code review for runtime observation.
 
-The expected Windows assets are `Lilith Setup 1.0.1-rc.2.exe` and `Lilith.exe`. The source archive is `lilith-desktop-1.0.1-rc.2-source.tar.gz`. Describe unsigned binaries accurately; do not claim publisher verification or code signing.
+The expected Windows assets are `Lilith Setup 1.0.1-rc.3.exe` and `Lilith.exe`. GitHub normalizes the installer download name to `Lilith.Setup.1.0.1-rc.3.exe`. The source archive is `lilith-desktop-1.0.1-rc.3-source.tar.gz`. Describe unsigned binaries accurately; do not claim publisher verification or code signing.
 
 The Windows GitHub Actions workflow is started only through `workflow_dispatch`. It uses Node.js 24, installs pinned dependencies, checks JavaScript syntax, runs the same preparation command, and saves a candidate artifact for review. It does not run an automated test suite or publish a GitHub release. No successful workflow run is claimed here.
 
@@ -106,3 +106,11 @@ The UI found the installed Steam game automatically and displayed Prepare Lilith
 The intentionally restricted PATH also prevented the PowerShell app/Spotify watchers from starting; this is an environment limitation of this check, not a normal-install result. Alt+F4 closed the app and a process check found no Lilith processes. An earlier hidden launch was explicitly terminated before this visible observation. No automated tests were run.
 
 This verifies fresh asset preparation on this existing machine with the packaged runtime. A clean Windows machine, installing rc.2 through its setup wrapper, absent-game/invalid-folder retries, and audio completeness remain NOT TESTED. The prior rc.1 installer observations are not substituted for these checks.
+
+## rc.3 model setup validation — 2026-11-01
+
+Read-only inspection of the existing runtime log and Ollama model inventory confirmed `llama3.2:latest` as the model used. Official Ollama download/model pages were checked for the README links. JavaScript syntax checks passed for main.js, ollama.js, and i18n.js.
+
+The startup logic now checks model availability, with a three-second timeout, and displays setup guidance for unavailable Ollama, missing chat models, or a missing explicitly configured model. Existing ready installations receive no setup prompt. This is an on-screen speech bubble, not synthesized audio.
+
+A live source launch with an intentionally unavailable Ollama endpoint was rejected by automatic approval review (blocked by policy). No claim is made that the new startup bubbles or their click actions were observed in the UI. No automated tests were run. Earlier rc.1 and rc.2 manual observations remain scoped to those builds.
