@@ -1,8 +1,12 @@
-# Covered sleep fix — source update, not yet packaged
+# Release policy
+
+The user requested on November 2, 2026 that future minor fixes be available through setup. Unless the user explicitly holds publication, finishing a minor fix includes a patch version bump, appropriate checks, a fresh setup-only build, and a stable GitHub release marked latest with the installer and SHA256SUMS.txt. A source push alone does not complete delivery. Preserve validation limitations in the notes. Never commit EXEs or publish a standalone Lilith.exe; setup installs it locally.
+
+# 1.0.3 covered sleep fix
 
 Normal naps now start covered. Removed the 25-second scheduler’s random blanket-removal branch; an explicitly uncovered nap settles under the blanket instead. Sleep reactions only start from a sleep idle, keeping lie-down and existing reaction transitions intact. Cover state changes only after the movement is accepted.
 
-Validation: JavaScript syntax and code review passed. A 60-second offline Spine-data simulation of lie-down, idle loops, and two mumble transitions found zero missing blanket attachment frames and minimum blanket opacity 1. This is animation-data validation, not a timed visual sleep observation. The running portable 1.0.1 was closed and local source restarted. This source update has not been packaged into a new release installer.
+Validation: JavaScript syntax and code review passed. A 60-second offline Spine-data simulation of lie-down, idle loops, and two mumble transitions found zero missing blanket attachment frames and minimum blanket opacity 1. This is animation-data validation, not a timed visual sleep observation. The running portable 1.0.1 was closed and local source restarted. Version 1.0.3 packages this fix for the setup updater.
 
 # 1.0.2 setup-only maintenance
 

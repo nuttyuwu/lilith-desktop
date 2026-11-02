@@ -32,7 +32,7 @@ if (packedPkg.version !== pkg.version) throw new Error('Rebuild the Windows pack
 if (JSON.stringify(packedPkg.dependencies) !== JSON.stringify(pkg.dependencies)) throw new Error('Packaged runtime dependencies are stale');
 
 const sourceFiles = [
-  '.gitignore', '.gitattributes', '.github/workflows/windows-build.yml',
+  'AGENTS.md', '.gitignore', '.gitattributes', '.github/workflows/windows-build.yml',
   'README.md', 'CHANGELOG.md', 'CONTRIBUTING.md', 'THIRD_PARTY_NOTICES.md', 'docs/RELEASE.md',
   'docs/images/lilith-hero.png', 'docs/images/lilith-greeting.png', 'docs/images/lilith-chat.png',
   'docs/images/lilith-in-action.gif',

@@ -1,3 +1,9 @@
+# 1.0.3 — Keep Lilith comfortable while sleeping
+
+- Normal naps start covered and no longer randomly remove the blanket.
+- Sleep reactions finish before another starts, preserving the queued resting pose.
+- Available through setup’s Update from GitHub button.
+
 # 1.0.2 — Setup-only installation and maintenance
 
 - Distribute only the setup installer; it installs Lilith.exe locally.

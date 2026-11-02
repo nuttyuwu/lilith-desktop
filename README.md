@@ -72,7 +72,7 @@ I still want you to get the game and support its creators. This companion prepar
 
 ## Current status
 
-**Version 1.0.2 — Windows x64.** [Download Lilith Setup](https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.2). Executables are release attachments, not files in the source repository.
+**Version 1.0.3 — Windows x64.** [Download Lilith Setup](https://github.com/nuttyuwu/lilith-desktop/releases/latest). Executables are release attachments, not files in the source repository.
 
 This release brings the compact controls, glass-style text input, sparkle tuck/return, original game dialogue and voice timing, and separate everyday/Claude chat contexts. AI-generated speech is paused; local text chat is optional.
 
@@ -90,7 +90,7 @@ The animated model, textures, voices, and dialogue are extracted from the player
 
 ## Install, update, or uninstall
 
-Download the current [Windows release](https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.2). The Windows binaries are unsigned.
+Download the current [Windows release](https://github.com/nuttyuwu/lilith-desktop/releases/latest). The Windows binaries are unsigned.
 
 | File | Use |
 |---|---|
