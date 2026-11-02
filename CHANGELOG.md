@@ -1,3 +1,9 @@
+# 1.0.2 — Setup-only installation and maintenance
+
+- Distribute only the setup installer; it installs Lilith.exe locally.
+- Reopen setup to check the latest stable GitHub release and install a checksum-verified update.
+- Uninstall from setup or Windows Settings; preserve settings and extracted game assets.
+
 ## 1.0.1 — public Windows release
 
 - Installer and portable Lilith.exe are provided as release downloads, not repository files.

@@ -72,7 +72,7 @@ I still want you to get the game and support its creators. This companion prepar
 
 ## Current status
 
-**Version 1.0.1 — Windows x64.** [Download the setup installer or portable Lilith.exe](https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1). Executables are release attachments, not files in the source repository.
+**Version 1.0.2 — Windows x64.** [Download Lilith Setup](https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.2). Executables are release attachments, not files in the source repository.
 
 This release brings the compact controls, glass-style text input, sparkle tuck/return, original game dialogue and voice timing, and separate everyday/Claude chat contexts. AI-generated speech is paused; local text chat is optional.
 
@@ -88,14 +88,19 @@ I've checked the source app on my Windows laptop. Clean-machine setup, sleep/wak
 
 The animated model, textures, voices, and dialogue are extracted from the player's installed game once, then loaded from the extracted asset folder. These assets are not bundled in the current executables or downloaded from this project. The current local build also contains a face icon copied from the game; permission to redistribute that artwork has not been established. Do not treat the local build as cleared for public redistribution.
 
-## Install or run
+## Install, update, or uninstall
 
-Download the current [Windows release](https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1). The Windows binaries are unsigned.
+Download the current [Windows release](https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.2). The Windows binaries are unsigned.
 
 | File | Use |
 |---|---|
 | `Lilith.Setup.<version>.exe` | Install Lilith with Desktop and Start Menu shortcuts. Current-user installation is the manually checked option. |
-| `Lilith.exe` | Run without installing the app. The runtime extracts temporarily and is removed on exit; settings and extracted game data remain in your user folders. |
+
+**One download: Lilith Setup.** Setup installs `Lilith.exe` on your PC; there is no separate portable download.
+
+- **Install:** open setup and choose Next.
+- **Update:** reopen setup and press **Update from GitHub**. It checks the latest stable release, downloads its setup, verifies the SHA-256, and asks before installing. Your settings and game assets stay in place.
+- **Uninstall:** reopen setup and press **Uninstall Lilith**, or use Windows Settings → Apps → Installed apps → Lilith → Uninstall. The app and shortcuts are removed; settings and extracted game assets are kept for reinstalling.
 
 The locally built executables are unsigned. Publisher signing has not been configured.
 
@@ -163,11 +168,11 @@ The experimental local Qwen implementation and downloaded models are retained fo
 
 **Ollama:** chat sends the conversation and persona context to the configured endpoint. Claude completion summaries can also be sent there. A stopped local Ollama service may be started when you use chat. Changing `LILITH_OLLAMA` to another host sends that content to that host; the default loopback address is not a guarantee for a customized configuration.
 
-**Claude Code:** the tray's Claude hook preference persists across launches. Hook events can include prompts, paths, command descriptions, and Claude's last reply. The Node hook trims events before sending them to the local receiver; Node.js on PATH is required, and a missing Node executable is reported instead of falling back to an untrimmed request. Hook scripts are stored under the app's user-data directory so the portable runtime's temporary cleanup does not remove them. Registration replaces legacy Lilith hook entries and passes the configured `LILITH_PORT` to the hook command. `LILITH_NO_HOOK=1` prevents automatic registration on that launch. Candidate runtime verification is recorded separately in [Release preparation](docs/RELEASE.md).
+**Claude Code:** the tray's Claude hook preference persists across launches. Hook events can include prompts, paths, command descriptions, and Claude's last reply. The Node hook trims events before sending them to the local receiver; Node.js on PATH is required, and a missing Node executable is reported instead of falling back to an untrimmed request. Hook scripts are stored under the app's user-data directory so app updates do not remove them. Registration replaces legacy Lilith hook entries and passes the configured `LILITH_PORT` to the hook command. `LILITH_NO_HOOK=1` prevents automatic registration on that launch. Candidate runtime verification is recorded separately in [Release preparation](docs/RELEASE.md).
 
 **App awareness:** the Windows watcher reads foreground application information and window titles locally to classify activity and recognize private contexts. Day records use app names and times. The app-awareness switch disables those comments and recording of the current app name. Do not publish raw settings, copied logs, screenshots, extracted data, or hook backups: they may contain personal information.
 
-The installer retains app data on uninstall. Quit Lilith and make your own backup before changing or removing saved data. The portable build also uses these user-data locations.
+The installer retains app data on uninstall. Quit Lilith and make your own backup before changing or removing saved data. 
 
 ## Build from source
 
@@ -213,7 +218,7 @@ LILITH_DEBUG=1 npm start
 - **Character is off-screen:** use Reset position and report the display scale, selected size, monitor arrangement, outfit, and preceding steps.
 - **Need diagnostics:** Tray → Copy log includes versions and recent log output. Review it for private information before sharing.
 
-For a useful issue, include the app version, installer or portable build, Windows version, display scale, reproduction steps, expected behavior, actual behavior, and a cropped screenshot when appropriate. See [CONTRIBUTING.md](CONTRIBUTING.md).
+For a useful issue, include the app version, setup version, Windows version, display scale, reproduction steps, expected behavior, actual behavior, and a cropped screenshot when appropriate. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Attribution and distribution status
 

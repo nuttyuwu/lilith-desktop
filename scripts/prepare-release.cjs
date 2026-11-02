@@ -10,7 +10,7 @@ const root = path.resolve(__dirname, '..');
 const appDir = path.join(root, 'lilith-pet');
 const pkg = JSON.parse(fs.readFileSync(path.join(appDir, 'package.json'), 'utf8'));
 if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(pkg.version)) throw new Error('Invalid release version');
-// Always complete both wrappers here; unpacked files alone cannot prove EXE freshness.
+// Always build the setup here; unpacked files alone cannot prove EXE freshness.
 const buildEnv = {
   ...process.env,
   CSC_IDENTITY_AUTO_DISCOVERY: 'false',
@@ -23,7 +23,7 @@ const extractorBuild = spawnSync('py', ['-3.12', path.join(root, 'scripts', 'bui
 if (extractorBuild.error || extractorBuild.status !== 0) throw new Error('Bundled extractor build failed');
 const build = spawnSync(process.execPath, [
   require.resolve('electron-builder/cli.js', { paths: [appDir] }),
-  '--win', 'nsis', 'portable', '--x64', '--publish', 'never',
+  '--win', 'nsis', '--x64', '--publish', 'never',
 ], { cwd: appDir, env: buildEnv, stdio: 'inherit', windowsHide: true });
 if (build.error || build.status !== 0) throw new Error(`Windows build failed: ${build.error?.message || build.status}`);
 const packedDir = path.join(appDir, 'dist', 'win-unpacked', 'resources', 'app');
@@ -40,6 +40,7 @@ const sourceFiles = [
   'scripts/build-extractor.py', 'scripts/extractor-notices.py', 'scripts/extractor-requirements.txt',
   'lilith-pet/index.html', 'lilith-pet/package.json', 'lilith-pet/package-lock.json',
   'lilith-pet/icon.png', 'lilith-pet/build/icon.ico',
+  'lilith-pet/build/installer.nsh', 'lilith-pet/build/update.ps1',
   'lilith-pet/qwen-worker.py', 'lilith-pet/qwen-download.py',
   ...fs.readdirSync(path.join(appDir, 'voices')).map(name => `lilith-pet/voices/${name}`),
   ...fs.readdirSync(appDir).filter(name => /\.(?:js|ps1)$/.test(name)).map(name => `lilith-pet/${name}`),
@@ -112,9 +113,9 @@ const archive = spawnSync('tar', ['-czf', sourceArchive, '-C', stageParent, 'lil
 });
 if (archive.error || archive.status !== 0) throw new Error(`Source archive failed: ${archive.error?.message || archive.stderr}`);
 
-const assetNames = [`Lilith.Setup.${pkg.version}.exe`, 'Lilith.exe'];
+const assetNames = [`Lilith.Setup.${pkg.version}.exe`];
 for (const name of assetNames) {
-  const from = path.join(appDir, 'dist', name === 'Lilith.exe' ? name : `Lilith Setup ${pkg.version}.exe`);
+  const from = path.join(appDir, 'dist', `Lilith Setup ${pkg.version}.exe`);
   regularFile(from);
   fs.copyFileSync(from, path.join(output, name));
 }
