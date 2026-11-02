@@ -40,6 +40,8 @@ const sourceFiles = [
   'scripts/build-extractor.py', 'scripts/extractor-notices.py', 'scripts/extractor-requirements.txt',
   'lilith-pet/index.html', 'lilith-pet/package.json', 'lilith-pet/package-lock.json',
   'lilith-pet/icon.png', 'lilith-pet/build/icon.ico',
+  'lilith-pet/qwen-worker.py', 'lilith-pet/qwen-download.py',
+  ...fs.readdirSync(path.join(appDir, 'voices')).map(name => `lilith-pet/voices/${name}`),
   ...fs.readdirSync(appDir).filter(name => /\.(?:js|ps1)$/.test(name)).map(name => `lilith-pet/${name}`),
 ].sort();
 const hash = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
@@ -73,8 +75,10 @@ for (const resource of pkg.build.extraResources) {
   verifyResource(source, packed);
 }
 const lock = JSON.parse(fs.readFileSync(path.join(appDir, 'package-lock.json'), 'utf8'));
+const supports = (values, target) => !values || (!values.includes(`!${target}`) && (!values.some(value => !value.startsWith('!')) || values.includes(target)));
 for (const [relative, metadata] of Object.entries(lock.packages)) {
   if (!relative.startsWith('node_modules/') || metadata.dev || metadata.devOptional) continue;
+  if (metadata.optional && (!supports(metadata.os, 'win32') || !supports(metadata.cpu, 'x64'))) continue;
   const file = path.join(packedDir, relative, 'package.json');
   regularFile(file);
   if (JSON.parse(fs.readFileSync(file, 'utf8')).version !== metadata.version) throw new Error(`Packaged dependency is stale: ${relative}`);
@@ -108,9 +112,9 @@ const archive = spawnSync('tar', ['-czf', sourceArchive, '-C', stageParent, 'lil
 });
 if (archive.error || archive.status !== 0) throw new Error(`Source archive failed: ${archive.error?.message || archive.stderr}`);
 
-const assetNames = [`Lilith Setup ${pkg.version}.exe`, 'Lilith.exe'];
+const assetNames = [`Lilith.Setup.${pkg.version}.exe`, 'Lilith.exe'];
 for (const name of assetNames) {
-  const from = path.join(appDir, 'dist', name);
+  const from = path.join(appDir, 'dist', name === 'Lilith.exe' ? name : `Lilith Setup ${pkg.version}.exe`);
   regularFile(from);
   fs.copyFileSync(from, path.join(output, name));
 }

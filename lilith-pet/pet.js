@@ -180,20 +180,26 @@ api.onSayError((m) => { mouth(false); show(m, 8000); });
 // --- chat input ---
 // The chat box closes itself after 10 s without typing (Ctrl+Alt+L or the right-click menu brings it back any time).
 const CHAT_IDLE_MS = 10000;
-let chatTimer = 0;
+let chatTimer = 0, chatMenuTimer = 0;
 const chatIdle = () => { clearTimeout(chatTimer); chatTimer = setTimeout(closeChat, CHAT_IDLE_MS); };
 function openChat() {
   showBar(false);
   chatBox.classList.add('show'); api.hover(true); lastOver = true; setTimeout(() => input.focus(), 30); chatIdle();
   // the game's "Lilith~?" (CallLilith) and its talk menu as chips; typing still goes to Ollama
-  if (fire('CallLilith')) setTimeout(() => { if (chatBox.classList.contains('show') && !chainOn) talkMenu(); }, 3000); else talkMenu();
+  clearInterval(chatMenuTimer);
+  fire('CallLilith');
+  chatMenuTimer = setInterval(() => {
+    if (!chatBox.classList.contains('show') || input.value.trim()) { clearInterval(chatMenuTimer); return; }
+    if (chainOn || (voice?.speech && !voice.ended && !voice.stopped)) return;
+    clearInterval(chatMenuTimer); talkMenu();
+  }, 100);
 }
-function closeChat() { clearTimeout(chatTimer); chatBox.classList.remove('show'); input.blur(); lastOver = null; }
-input.addEventListener('input', chatIdle);
+function closeChat() { clearTimeout(chatTimer); clearInterval(chatMenuTimer); chatBox.classList.remove('show'); input.blur(); lastOver = null; }
+input.addEventListener('input', () => { clearInterval(chatMenuTimer); chatIdle(); });
 input.addEventListener('keydown', (e) => {
   chatIdle();
   if (e.key === 'Escape') closeChat();
-  if (e.key === 'Enter' && input.value.trim()) { api.chat(input.value.trim()); input.value = ''; if (activity === 'sit' || activity === 'lie') seatedReact(); else play(rnd(outfit.actions.slice(0, 4))); }   // lying/sitting: she answers from there
+  if (e.key === 'Enter' && input.value.trim()) { clearInterval(chatMenuTimer); api.chat(input.value.trim()); input.value = ''; if (activity === 'sit' || activity === 'lie') seatedReact(); else play(rnd(outfit.actions.slice(0, 4))); }   // lying/sitting: she answers from there
 });
 api.onOpenChat(openChat);
 
@@ -313,9 +319,8 @@ window.addEventListener('mouseup', (e) => {
   else if (down && e.button === 0) {
     const area = hitArea(e.clientX, e.clientY), dbl = performance.now() - lastClick < 380; lastClick = performance.now();
     if (typeof notePoke === 'function' && notePoke()) { /* poke spam: she's had enough (alive.js) */ }
-    else if (dbl && fire('DoubleClick', { force: true })) { /* the game's double-click lines */ }
-    else if (area !== 'TouchBody' && fire(area)) { /* face / chest / hand / skirt / leg: the game's own reactions */ }
-    else if (flirty() && Math.random() < 0.35) { play(rnd(FLIRT_ACTS[outfit === OUTFITS.pajamas ? 1 : 0])); sayLine(FLIRT_LINES) || say(); }
+    else if (dbl && fire('DoubleClick')) { /* the game's double-click lines */ }
+    else if (fire(area)) { /* the game's own reaction, including TouchBody */ }
     else { play(rnd(outfit.actions)); say(); }
   }
   down = null;
@@ -353,11 +358,11 @@ function headHit(x, y) {
   return Math.hypot(x - cx, y - cy) < r ? r : 0;
 }
 function startPat() {
-  if (patting) return;
+  if (patting || down?.patted) return;
   if (activity === 'sulk') { if (down && !down.patted && typeof sulkPat === 'function') { down.patted = true; sulkPat(); } return; }   // sulking: one rub counts once toward making up
   if (typeof moodPat === 'function') moodPat();
   patting = true; lastInteraction = Date.now(); if (down) down.patted = true;
-  fire('TouchHead', { force: true }) || sayLine(HEADPAT_LINES) || sayLine();
+  fire('TouchHead') || sayLine(HEADPAT_LINES) || sayLine();
   if (activity === 'sit') return sitFidget('sit_casual_shake_leg');   // seated: happy leg swing (an expression anim on the turned face looked broken)
   endActivity(false);
   play(outfit === OUTFITS.pajamas ? 'stand_pajamas_rub_head' : 'stand_casual_rub_head');
@@ -367,7 +372,6 @@ function stopPat() {
   if (!patting) return;
   patting = false; patEntry = null;   // the loop lets go: rub_head plays its ending, then idle
   lookAtYou(3000);   // then she looks at you for a moment, after her line
-  if (flirty() && Math.random() < 0.3) setTimeout(() => sayLine(FLIRT_LINES), 2500);
 }
 function patTick() { if (patting && patEntry && state.tracks[T_BODY] === patEntry && patEntry.trackTime > PAT_END) { patEntry.trackTime = PAT_START; patEntry.animationLast = PAT_START; } }
 
@@ -387,7 +391,6 @@ const bar = document.getElementById('bar');
 function controlPage(name) {
   for (const page of bar.querySelectorAll('[data-page]')) page.hidden = page.dataset.page !== name;
   bar.scrollTop = 0;
-  bar.querySelector('[data-page]:not([hidden]) button')?.focus({ preventScroll: true });
 }
 // Toolbar just above her head, speech bubble above the toolbar, both following her head (standing, sitting on a
 // window, mid-animation). The bubble is as big as what she says: up to the window top, then over her a little, then scroll.
@@ -399,7 +402,10 @@ function layoutUi() {
   skeleton.getBounds(_bo, _bs, []);
   const cam = app.renderer.camera, dpr = window.devicePixelRatio || 1;
   const head = (canvas.height / 2 - (_bo.y + _bs.y - cam.position.y) / cam.zoom) / dpr;   // CSS y of her hair top
-  const barTop = Math.max(8, Math.min(Math.round(head), innerHeight - bar.offsetHeight - 8));
+  const barScale = Math.min(1, Math.max(1, innerWidth - 16) / Math.max(1, bar.offsetWidth));
+  bar.style.setProperty('--bar-scale', barScale);
+  const barHeight = bar.offsetHeight * barScale;
+  const barTop = Math.max(8, Math.min(Math.round(head) - barHeight - 10, innerHeight - barHeight - 8));
   bar.style.top = `${barTop}px`;
   if (!bubble.classList.contains('show')) return;
   const border = bubble.offsetHeight - bubble.clientHeight;
@@ -507,6 +513,10 @@ api.onTuck((v) => {
   tucked = on; perched = false; tuckLeaving = !on;
   if (!data) return;
   endActivity(false); stopChain(); closeChat();
+  // A lying track would reapply its large root offset during the teleport delay.
+  state.clearTrack(T_BODY);
+  seatShift = 0; headUp = 0;
+  const root = skeleton.getRootBone(); root.y = root.data.y;
   showBar(false); bubble.className = '';
   busy = true;
   state.setEmptyAnimation(T_FACE, 0.15);
@@ -517,11 +527,19 @@ api.onTuckComplete(({ on }) => {
   if (on !== tucked) return;
   tuckLeaving = false;
   if (!data) return;
+  // clearTrack stops playback but leaves keyed attachments/bone transforms behind.
+  // Peek uses different eye slots: rebuild the pose while hidden before revealing it.
+  unlook();
+  state.clearTracks();
+  skeleton.setToSetupPose();
   if (on) tuckPose();
   else {
-    lean = 0; const root = skeleton.getRootBone(); root.rotation = 0; root.x = root.data.x;
+    lean = 0; const root = skeleton.getRootBone(); root.rotation = 0; root.x = root.data.x; root.y = root.data.y;
+    seatShift = 0; headUp = 0;
     play(outfit.greet);
+    if (state.tracks[T_BODY]) state.tracks[T_BODY].mixDuration = 0;
   }
+  state.apply(skeleton);
   skeleton.updateWorldTransform(spine.Physics.reset);
   fx.replaceChildren();
   poof(false, true);

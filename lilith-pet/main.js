@@ -10,8 +10,12 @@ const os = require('os');
 const http = require('http');
 const { pathToFileURL } = require('url');
 const claude = require('./claude');
+const { isClaudeOpen } = require('./claude-presence');
+const { CLAUDE_OPEN, CLAUDE_CLOSED } = require('./chat-prompts');
+let lastChatClaudeMode = null;
 const ollama = require('./ollama');
 const settings = require('./settings');
+const { createSpeech, VOICES: AI_VOICES, EXAMPLE: AI_EXAMPLE } = require('./speech');
 const profile = require('./profile');
 const spotify = require('./spotify');
 const { appKind, isPrivate, appName } = require('./apps');
@@ -35,6 +39,9 @@ let cfg = settings.load(SETTINGS);
 if (!cfg.since) { try { cfg.since = Math.round(fs.statSync(SETTINGS).birthtimeMs) || Date.now(); } catch { cfg.since = Date.now(); } }   // her days together count from here
 const T = (k, v) => i18n.t('en', k, v);   // menus, dialogs and notices are always English; only her lines and voice follow the language
 const langName = (t) => (settings.LANGS.find((l) => l[0] === t) || settings.LANGS[0])[1];
+const aiSpeech = createSpeech(path.join(app.getPath('appData'), 'lilith-pet', 'speech-models'), log);
+const AI_SPEECH_PAUSED = true;
+let aiSpeechEpoch = 0, chatTurn = 0, aiSpeechStatus = 'AI speech is off.';
 const saveCfg = () => { try { settings.save(SETTINGS, cfg); } catch (e) { log('settings save', e.message); } };
 const fatal = (msg) => { log('FATAL', msg); dialog.showErrorBox('Lilith', msg); };
 // Tests only (LILITH_E2E=1, tests/e2e_stab.js): click tray items by label from the inspector, and record the error box
@@ -157,7 +164,7 @@ function fall() {
 
 // Window watcher (Windows only): visible windows so she can stand on title bars and ride along when they move.
 let quitting = false;
-app.on('before-quit', () => { quitting = true; });
+app.on('before-quit', () => { quitting = true; aiSpeech.dispose(); });
 function startWindowWatcher() {
   if (process.platform !== 'win32') return;
   const hwnd = win.getNativeWindowHandle().readBigUInt64LE(0).toString();
@@ -194,6 +201,9 @@ function onFullscreen(full) {
   setTucked(true, true); autoTucked = tucked || pendingTuck === true;
 }
 function onForeground({ fg, title, full }) {
+  // Windows screenshot selection covers the monitor but is not a fullscreen app.
+  // Preserve the underlying app state while the transient capture overlay is up.
+  if (/^(SnippingTool|ScreenClippingHost|ScreenSketch|ScreenCaptureHost)(\.exe)?$/i.test(fg || '')) return;
   onFullscreen(!!full && !!fg);
   fgApp = cfg.appAware ? appName(fg, title) : null; fgAppKind = cfg.appAware ? appKind(fg, title) : null;
   if (!cfg.appAware) { if (fgPrivate) { fgPrivate = false; win?.webContents.send('private', false); } return; }   // switched off: she doesn't look
@@ -221,6 +231,7 @@ function sitBox(p) { const up = p.sitPx ? p.sitPx + Math.round(size.h * SIT_HEAD
 
 // Tuck uses a sparkle teleport, preserving the previous standing position for return.
 function setTucked(on, automatic = false) {
+  if (on) stopAISpeech();
   if (!win || dragTimer || fallTimer) return;
   if (tuckMoveTimer) {
     pendingTuck = on; pendingAutoTuck = automatic;
@@ -341,9 +352,10 @@ function buildPersona() {
   } catch (e) { log('persona corpus', e.message); }
   const user = cfg.profile?.name || os.userInfo().username;
   return `You are Lilith from "The NOexistenceN of you AND me", living on ${user}'s desktop as a small companion next to their work.
+When addressing the person by name, use their saved preferred name: ${JSON.stringify(user)}.${user.toLowerCase() !== 'visitor' ? ' Do not replace it with "Visitor" or invent another name.' : ''}
 Speak exactly like her: playful, teasing, warm, a little lonely; often calls herself "Lilith" in third person; may end lines with "~".
 Always reply in ${langName(cfg.lang)}, never mix languages. Reply in 1-3 short sentences. No emojis, no *actions*, no lists, never mention being an AI or a model.
-You can also see what Claude (the coding assistant ${user} uses) is doing, and you comment on it in character.
+The game dialogue examples below are style references, not evidence of current events or things you have observed.
 ${profile.personaLines(cfg.profile)}
 Lines Lilith has said (match this voice):
 ${ex.join('\n')}`;
@@ -449,20 +461,96 @@ async function ensureModel() {
   return model;
 }
 
+function speechStatus(text) {
+  aiSpeechStatus = text;
+  if (tray && !tray.isDestroyed()) buildMenu();
+}
+function stopAISpeech() {
+  aiSpeechEpoch++; aiSpeech.cancel();
+  win?.webContents.send('ai-speech-stop');
+}
+async function speakAI(text, language, audition = false) {
+  // Keep the experimental implementation for later; no auditions or live synthesis for now.
+  if (AI_SPEECH_PAUSED) return speechStatus('AI voice is disabled for now. Lilith uses her original game recordings.');
+  if (!audition && !cfg.aiSpeech) return;
+  stopAISpeech(); const epoch = aiSpeechEpoch;
+  if (!aiSpeech.ready()) { speechStatus('Set up local Qwen in tray Settings → AI speech.'); return; }
+  const lang = language || (/[\u3400-\u9fff]/.test(text) ? 'zh' : 'en');
+  const sid = lang === 'zh' ? cfg.aiVoiceZh : cfg.aiVoiceEn;
+  speechStatus('Preparing her voice…');
+  try {
+    const result = await aiSpeech.generate(text, sid, cfg.aiSpeechSpeed, cfg.aiSpeechDevice, chunk => {
+      if (epoch !== aiSpeechEpoch || (!audition && !cfg.aiSpeech) || tucked || quitting) return;
+      win?.webContents.send('ai-speech', { ...chunk, text, streamId: epoch });
+      speechStatus(`Speaking with her approved Qwen voice — local ${chunk.backend}.`);
+    });
+    if (epoch !== aiSpeechEpoch || (!audition && !cfg.aiSpeech) || tucked || quitting) return;
+    log('AI speech', JSON.stringify({ sid, backend: result.backend, ms: result.elapsedMs, firstAudioMs: result.firstAudioMs, seconds: result.samples.length / result.sampleRate }));
+    win.webContents.send('ai-speech', { done: true, streamId: epoch });
+  } catch (error) {
+    if (error.name === 'AbortError' || epoch !== aiSpeechEpoch) return;
+    win?.webContents.send('ai-speech-stop');
+    log('AI speech error', error.message); speechStatus(error.message + '. Your text reply is still available.');
+  }
+}
+async function installAISpeech(device = 'auto') {
+  if (AI_SPEECH_PAUSED) return;
+  setAISpeech('enabled', true);
+  speechStatus('Setting up local Qwen. This downloads Python packages and the model; first setup can take several minutes.');
+  try {
+    await aiSpeech.install(pct => speechStatus('Setting up local Qwen…'), device);
+    sendConfig(); buildMenu();
+    speechStatus('AI voice is ready. Choose Preview English or Preview Chinese.');
+  } catch (error) { if (!quitting) { log('AI voice setup', error.message); speechStatus('Voice setup failed: ' + error.message); } }
+}
+function setAISpeech(key, value) {
+  if (AI_SPEECH_PAUSED) {
+    cfg.aiSpeech = false; stopAISpeech(); aiSpeech.unload(); saveCfg();
+    return speechStatus('AI voice is disabled for now. Lilith uses her original game recordings.');
+  }
+  if (key === 'enabled' && typeof value === 'boolean') cfg.aiSpeech = value;
+  else if (key === 'device' && ['auto', 'gpu', 'cpu'].includes(value)) cfg.aiSpeechDevice = value;
+  else if (key === 'en' && AI_VOICES.en.some(v => v.id === value)) cfg.aiVoiceEn = value;
+  else if (key === 'zh' && AI_VOICES.zh.some(v => v.id === value)) cfg.aiVoiceZh = value;
+  else if (key === 'speed' && [0.9, 1, 1.1].includes(value)) cfg.aiSpeechSpeed = value;
+  else return;
+  stopAISpeech();
+  if (!cfg.aiSpeech || key === 'device') aiSpeech.unload();
+  saveCfg(); sendConfig(); buildMenu();
+  speechStatus(cfg.aiSpeech ? (aiSpeech.ready() ? 'AI replies will be spoken locally.' : 'Download the AI voice model to enable playback.') : 'AI speech is off. Game voice has its own setting.');
+}
+onPet('ai-speech-setting', (_e, key, value) => setAISpeech(key, value));
+onPet('ai-speech-playback', (_e, status) => {
+  if (status === 'ended') speechStatus('Ready for the next reply.');
+  else if (status === 'failed') speechStatus('Audio output failed. Check Windows output/mute and try Preview again.');
+});
+
 // Stream a reply into the bubble. kind: 'chat' keeps history, 'aside' is a one-off comment (Claude events).
 async function speak(userText, kind = 'chat') {
   if (!win) return false;
-  if (!(await ollamaReady(kind === 'chat'))) return false;
-  chatAbort?.abort(); chatAbort = new AbortController();
-  const msgs = [{ role: 'system', content: persona }, ...(kind === 'chat' ? history : []), { role: 'user', content: userText }];
+  const turn = ++chatTurn; stopAISpeech(); chatAbort?.abort();
+  if (!(await ollamaReady(kind === 'chat')) || turn !== chatTurn) return false;
+  const controller = chatAbort = new AbortController();
+  const claudeOpen = kind === 'aside' || await isClaudeOpen();
+  if (turn !== chatTurn || controller.signal.aborted) return false;
+  if (kind === 'chat' && lastChatClaudeMode !== claudeOpen) {
+    history = []; lastChatClaudeMode = claudeOpen;
+  }
+  const msgs = [{ role: 'system', content: persona + '\n\n' + (claudeOpen ? CLAUDE_OPEN : CLAUDE_CLOSED) }, ...(kind === 'chat' ? history : []), { role: 'user', content: userText }];
   win.webContents.send('say-start');
   try {
-    const reply = await ollama.chat(await ensureModel(), msgs, (t) => win.webContents.send('say-token', t), chatAbort.signal);
+    const selectedModel = await ensureModel();
+    if (turn !== chatTurn || controller.signal.aborted) return false;
+    const reply = await ollama.chat(selectedModel, msgs, (t) => {
+      if (turn === chatTurn && !controller.signal.aborted && win && !win.isDestroyed()) win.webContents.send('say-token', t);
+    }, controller.signal);
+    if (turn !== chatTurn) return false;
     if (kind === 'chat') { history.push({ role: 'user', content: userText }, { role: 'assistant', content: reply }); history = history.slice(-20); }
     win.webContents.send('say-end');
+    if (kind === 'chat' && (cfg.lang === 'en' || cfg.lang?.startsWith('zh'))) void speakAI(reply);
     return true;
   } catch (e) {
-    if (e.name === 'AbortError') return false;
+    if (e.name === 'AbortError' || turn !== chatTurn) return false;
     log('ollama', e.message);
     if (/no models/i.test(e.message)) {
       model = null;
@@ -622,6 +710,7 @@ function set(key, value) {
 // Quit: she says goodbye first (the game's Farewell lines), then the app closes.
 let leaving = false;
 function farewell() {
+  stopAISpeech();
   if (!win || leaving || tucked) return app.quit();
   leaving = true; win.webContents.send('farewell');
   setTimeout(() => app.quit(), 4500);
@@ -669,7 +758,8 @@ function buildMenu() {
       { label: T('m.size'), submenu: sizes },
       { label: T('m.language', { l: langName(cfg.lang) }), submenu: availableLangs().map(([t, l]) => ({ label: l, type: 'radio', checked: cfg.lang === t, click: () => setLang(t) })) },
       { label: T('m.voice'), submenu: [...voices, { type: 'separator' },
-        { label: 'Test voice', click: () => { setTucked(false); win.webContents.send('test-voice'); } }] },
+        { label: 'Test voice', click: () => { stopAISpeech(); setTucked(false); win.webContents.send('test-voice'); } }] },
+      { label: 'AI voice — disabled for now (original game voice only)', enabled: false },
       { label: T('m.quality'), submenu: ['auto', 'high', 'low'].map((q) => ({ label: T(`q.${q}`), type: 'radio', checked: (cfg.quality || 'auto') === q,
         click: () => { cfg.quality = q; saveCfg(); buildMenu(); win.loadURL(pageUrl()); } })) },
       { label: cfg.profile ? T('m.aboutName', { name: cfg.profile.name }) : T('m.about'), click: () => { setTucked(false); win.webContents.send('setup'); } },
@@ -736,7 +826,11 @@ onPet('sit', (_e, px, floor) => {
 });
 // hover bar: Claude / ChatGPT, or Spotify transport (music-*). Hide + Demo live in the tray.
 onPet('toolbar', (_e, a) => {
-  if (a === 'test-voice') return win.webContents.send('test-voice');
+  if (a === 'ai-download') return installAISpeech();
+  if (a === 'ai-toggle') return setAISpeech('enabled', !cfg.aiSpeech);
+  if (a === 'ai-stop') { stopAISpeech(); return speechStatus('Speech stopped.'); }
+  if (a === 'ai-test-en' || a === 'ai-test-zh') { const lang = a.slice(-2); return speakAI(AI_EXAMPLE[lang], lang, true); }
+  if (a === 'test-voice') { stopAISpeech(); return win.webContents.send('test-voice'); }
   if (a === 'tuck') return setTucked(true);
   if (a === 'quit') return farewell();
   if (a === 'settings') return tray?.popUpContextMenu(trayMenu);
@@ -768,6 +862,7 @@ const availableLangs = () => settings.LANGS.filter(([t]) => t === 'en' || fs.exi
   .map(([t, l]) => [t, l, settings.effectiveVoice({ ...cfg, lang: t })]);
 function sendConfig() {
   win?.webContents.send('config', { voice: settings.effectiveVoice(cfg), dayCycle: cfg.dayCycle, listen: !!cfg.listen, profile: cfg.profile || null, lang: cfg.lang, langs: availableLangs(),
+    aiSpeech: { enabled: cfg.aiSpeech, ready: aiSpeech.ready(), en: cfg.aiVoiceEn, zh: cfg.aiVoiceZh, speed: cfg.aiSpeechSpeed, voices: AI_VOICES, status: aiSpeechStatus },
     chatter: cfg.chatter, clockClothes: cfg.clockClothes, appAware: cfg.appAware, since: cfg.since });
 }
 // Text language. The voice follows it for Chinese/Japanese (settings.effectiveVoice), so text and voice never mix.

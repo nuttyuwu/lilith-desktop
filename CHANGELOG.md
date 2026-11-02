@@ -1,11 +1,54 @@
+## 1.0.1 — public Windows release
+
+- Installer and portable Lilith.exe are provided as release downloads, not repository files.
+- Original game voices and dialogue, compact Claude/GPT/music controls, glass-style chat, and sparkle tuck/return.
+- Corrected lingering peek eyes, lying pose offsets, duplicate post-pat flirt, and dialogue audio timing.
+- Separate everyday and Claude-present chat prompts; AI-generated speech remains paused.
+- Unsigned Windows x64 builds. Requires your own game installation for initial asset preparation.
+
+## Original game voice and interactions — development history
+
+- Pause AI speech and remove English AI voice controls; retain Qwen for future development.
+- Wait for game recordings to finish before advancing dialogue or showing replies.
+- Remove the extra delayed head-pat flirt and prioritize the original touch graph.
+- Add once-daily morning greeting and first-morning-touch going-out conversation using game dialogue.
+
+## Faster Qwen speech — unpublished
+
+- Reuse the same model and approved voice references with NVIDIA CUDA graph acceleration; stream validated audio into an ordered playback queue.
+- Keep the model warm for five minutes between replies while preserving immediate unload when voice is disabled.
+- Retain standard Qwen for CPU/AMD and older runtimes without acceleration; GPU setup installs the pinned accelerator.
+- Warm short-sample first audio measured at 0.77–0.98 seconds on the 6 GB RTX 3060 laptop; cold startup remains slower. No EXE build or GitHub push.
+
+## Local GPU speech and profile correction — unpublished
+
+- Add Automatic/GPU-only/CPU-only modes for Qwen, with CUDA/ROCm reduced-precision inference and official GPU runtime setup paths.
+- Switching AI voice off immediately stops playback and unloads its model process; disabled voice does not start an inference worker.
+- Make the development preview use the saved user profile instead of Visitor, and anchor generated dialogue to the saved preferred name.
+- No EXE build or GitHub publication.
+
+## Local approved Qwen voices and compact controls — unpublished
+
+- Connect approved English/Chinese synthetic references to offline Qwen3-TTS0.6B speech for Ollama replies; replace active Kokoro backend.
+- Keep inference in an owned subprocess with cancellation, bounded output and idle unloading; retain text if speech fails.
+- Shrink the Claude/GPT/media pill and remove automatic red focus around Claude.
+- CPU speech is functional but slow on the tested laptop:45–82seconds for short lines. No EXE build or GitHub push.
+
+## Local AI speech work — not packaged or published
+
+- Add optional CPU-based English/Mandarin speech for Ollama replies, automatic verified model setup, voice previews/selectors, independent mute, speed, and cancellation.
+- Default to af_maple and provisional Chinese acoustic-match candidate zf_076; preserve recorded game voice controls.
+- Keep native inference outside the animation process; release idle model memory and retain text on speech failure.
+
 # Changelog
 
-## 1.0.1-rc.6 — private prerelease
+## 1.0.1-rc.6 — local development; release on hold
 
+- Widen transparent side margins for live hair physics; derive tucked width from height so narrow displays do not shrink her. This margin fix is local only.
 - Restore sparkle teleport for tuck/return instead of sliding the window. Remember the previous position, correct seated offsets, and clamp the return if a display changes.
 - Advance Spine’s physics clock and feed actual window-drag movement to the existing physics constraints, restoring hair motion. Preserve the pointer-down anchor for fast drag pickup.
 - Queue tuck requests during transitions and reconcile automatic fullscreen changes without losing manual overrides.
-- Include decoded clip duration, channels and audio-engine state in the copied log after Test game voice. Audible playback on the reported new desktop remains unconfirmed; AI replies still have no TTS.
+- Include decoded clip duration, channels and audio-engine state in the copied log after Test game voice. Audible playback on the reported new desktop remains unconfirmed; this motion checkpoint preceded the local AI speech work above.
 
 ## 1.0.1-rc.5 — private prerelease
 
@@ -19,7 +62,7 @@
 - Use consistent outer-window coordinates for walking, dragging and falling on scaled Windows displays; retain walking root-motion cancellation through animation blends.
 - Match the game’s star dialogue bubbles and checkerboard panels using UI sprites from the player’s extracted assets, with a CSS fallback.
 - Add a Voice button and Settings > Voice > Test voice, report playback failures, and bound audio-output resume waits. Windows mute and user voice preferences remain under user control.
-- The user reports successful rc.3 installation on a second desktop. Six extraction audio-format warnings and reported silence remain distinct from a verified audio-device diagnosis. Generated chat has no text-to-speech.
+- The user reports successful rc.3 installation on a second desktop. Six extraction audio-format warnings and reported silence remain distinct from a verified audio-device diagnosis. That candidate did not include generated chat speech.
 
 ## 1.0.1-rc.3 — private prerelease
 

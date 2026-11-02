@@ -1,6 +1,6 @@
 {
   "name": "lilith-pet",
-  "version": "1.0.1-rc.6",
+  "version": "1.0.1",
   "description": "Lilith from The NOexistenceN of Lilith as a desktop companion (unofficial fan project, assets read from your own copy)",
   "private": true,
   "license": "UNLICENSED",
@@ -20,7 +20,8 @@
     "extractor:build": "python ../scripts/build-extractor.py"
   },
   "dependencies": {
-    "@esotericsoftware/spine-webgl": "4.2.43"
+    "@esotericsoftware/spine-webgl": "4.2.43",
+    "sherpa-onnx-node": "2.0.1"
   },
   "devDependencies": {
     "electron": "45.2.1",
@@ -35,7 +36,9 @@
       "*.ps1",
       "index.html",
       "package.json",
-      "icon.png"
+      "icon.png",
+      "qwen-*.py",
+      "voices/**"
     ],
     "extraResources": [
       {

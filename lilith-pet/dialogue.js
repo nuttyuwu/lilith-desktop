@@ -148,11 +148,30 @@ function candidates(trig, states) {
 // fire(trigger, { states, force }): plays one node chain; false when nothing fits (caller falls back).
 function fire(trig, { states = null, force = false } = {}) {
   if (!dlg.ok || !data || (tucked && !force) || demoing || setupOn) return false;
-  if (chainOn && !force) return false;
+  if (chainOn && !force) return /^Touch|^DoubleClick$/.test(trig);
+  if (voice?.speech && !voice.ended && !voice.stopped) return /^Touch|^DoubleClick$/.test(trig);
+  if (/^Touch/.test(trig) && morningTouch()) return true;
   const n = pick(candidates(trig, states));
   if (!n) return false;
   runNode(n);
   return true;
+}
+// Morning context persists across restarts. Keep the actual game lines and reply chains.
+function morningGreeting() {
+  const now = new Date();
+  if (!data || busy || activity || dragging || setupOn || tucked || demoing) return false;
+  if (now.getHours() < 6 || now.getHours() >= 9 || mem.morning === dateKey(now)) return false;
+  if (fire('TimeMorning')) { mem.morning = dateKey(now); saveMem(); return true; }
+  return false;
+}
+function morningTouch() {
+  const now = new Date(), day = dateKey(now);
+  if (now.getHours() < 6 || now.getHours() >= 9) return false;
+  if (mem.morning !== day && morningGreeting()) return true;
+  if (mem.morningOut === day) return false;
+  const n = pick(candidates('PlayerInitiated', ['s26_out']));
+  if (!n) return false;
+  mem.morningOut = day; saveMem(); runNode(n); return true;
 }
 // One game line by id, outside the graph (app awareness lines 2051297-2051300 have no node, and no voice).
 function sayId(id) {
@@ -167,12 +186,13 @@ function runNode(n) {
   clearTimeout(chainTimer); chainOn = true; chainNode = n;
   played[n.id] = Date.now(); savePlayed(); afterPlay(n);
   const l = lineOf(n);
+  let playback;
   let ms = l ? Math.max(2500, (n.dur || 3) * 1000) : Math.max(400, (n.dur || 0) * 1000);   // action-only nodes lead straight into their line
   if (l) {
     const text = resolveText(l.text);
     ms = Math.max(ms, text.length * 70);
     show(text, n.plo.length ? 0 : ms + 1500);
-    playClip((n.snd && lineVoice({ soundId: n.snd })) || lineVoice(l));
+    playback = playClip((n.snd && lineVoice({ soundId: n.snd })) || lineVoice(l));
     talkMouth();
   }
   // her expression only over a plain pose: an action still playing from the last line keys its own face (two faces)
@@ -181,10 +201,19 @@ function runNode(n) {
   }
   doAction(ACT[n.act]);
   if (l && !busy && resolveText(l.text).length > 45 && Math.random() < 0.4) talkGesture();   // long line, no action of its own: she talks with her hands
-  if (n.plo.length) return offerReplies(n);
   const next = n.next > 0 && dlg.byId[n.next];
-  if (next) chainTimer = setTimeout(() => { if (chainNode === n) runNode(next); }, ms);
-  else chainTimer = setTimeout(() => { if (chainNode === n) stopChain(); }, ms);
+  Promise.resolve(playback).then((started) => {
+    if (chainNode !== n) return;
+    // The Chinese recording can be longer than the node's nominal duration.
+    const delay = Math.max(ms, started === true ? (voice?.duration || 0) * 1000 + 150 : 0);
+    if (l) show(resolveText(l.text), n.plo.length ? 0 : delay + 1500);
+    chainTimer = setTimeout(() => {
+      if (chainNode !== n) return;
+      if (n.plo.length) offerReplies(n);
+      else if (next) runNode(next);
+      else stopChain();
+    }, delay);
+  });
 }
 function talkMouth() {
   if (!data.findAnimation('talk_happy_short')) return;

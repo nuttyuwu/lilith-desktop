@@ -63,20 +63,29 @@
   #bar button:focus-visible, #bubble button:focus-visible, #setup button:focus-visible,
   #setup input:focus-visible, #setup select:focus-visible, #chat input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   #bubble { scrollbar-width: thin; scrollbar-color: #e94358 #f0edf1; }
-  /* Original pet's right-click menu: standalone white bars and its corner hover art. */
-  #bar { position: absolute; z-index: 5; left: 50%; top: 8px; transform: translateX(-50%);
-    width: min(294px, calc(100% - 16px)); max-height: calc(100% - 16px); overflow-y: auto;
-    visibility: hidden; pointer-events: none; scrollbar-width: thin; scrollbar-color: #e94358 #fff; }
+  /* Compact launcher/media pill, matching the user's original toolbar. */
+  #bar { position: absolute; z-index: 5; left: 50%; top: 8px; transform: translateX(-50%) scale(var(--bar-scale, 1)); transform-origin: top center;
+    width: max-content; border: 1px solid #3b3745;
+    border-radius: 999px; background: rgba(24, 22, 31, .90); padding: 2px 5px;
+    visibility: hidden; pointer-events: none; }
   #bar.show { visibility: visible; pointer-events: auto; }
   #bar [hidden] { display: none; }
-  #bar button { position: relative; display: block; width: 100%; min-height: 48px; margin: 0 0 3px;
-    padding: 16px 20px 8px; border: 0; background: transparent; color: #11111b;
-    font: 600 clamp(12px, 4vw, 16px)/1.25 "Segoe UI", sans-serif; cursor: pointer; isolation: isolate; }
-  #bar button::before { content: ""; position: absolute; z-index: -1; inset: 10px 5px 3px;
-    background: #fff var(--game-control, none) center / 100% 100% no-repeat; border: 1px solid #171722; }
-  #bar button:hover::before, #bar button:focus-visible::before { inset: 0; border: 0;
-    background: var(--game-controlHover, linear-gradient(#fff, #fff)) center / 100% 100% no-repeat; }
-  #bar button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  #bar [data-page="main"] { display: flex; align-items: center; gap: 2px; }
+  #bar button { display: inline-flex; justify-content: center; align-items: center; min-width: 22px; min-height: 24px;
+    padding: 2px 5px; border: 0; border-radius: 6px; background: transparent; color: #e4e0eb;
+    font: 500 12px/1 "Segoe UI", sans-serif; cursor: pointer; }
+  #bar button:hover, #bar button:focus-visible { background: #ffffff16; color: #fff; }
+  #bar button:focus { outline: none; }
+  #bar button:focus-visible { outline: 1px solid #aaa2b6; outline-offset: -1px; }
+  #bar .media-divider { width: 1px; height: 15px; background: #49434f; margin: 0 2px; }
+  #bar svg { width: 11px; height: 11px; fill: currentColor; pointer-events: none; }
+  /* Quiet glass-style chat; backdrop blur is progressive within the pet surface. */
+  #chat { left: 50%; right: auto; width: min(82%, 360px); transform: translateX(-50%); bottom: 3%; }
+  #chat input { padding: 8px 12px; font: 400 13px/1.4 "Segoe UI", sans-serif;
+    color: #f5f2fb; caret-color: #e1d5f4; background: rgba(24, 22, 34, .76);
+    border: 1px solid rgba(225, 216, 243, .3); border-radius: 14px;
+    backdrop-filter: blur(16px); box-shadow: 0 4px 16px #0003, inset 0 1px 0 #ffffff12; }
+  #chat input:focus-visible { outline: 1px solid #d0c1e7; outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { #bar, #bubble { transition: none; } }
 </style>
 </head>
@@ -86,27 +95,12 @@
 <div id="bubble"></div>
 <div id="bar" role="region" aria-label="Lilith controls" inert>
   <div data-page="main">
-    <button data-a="talk">Talk to Lilith…</button>
-    <button data-page-target="outfits">Dress up</button>
-    <button data-page-target="more">More controls</button>
-    <button data-a="quit">Exit Realm</button>
-    <button data-a="close">Close menu</button>
-  </div>
-  <div data-page="outfits" hidden>
-    <button data-a="outfit-casual">Everyday outfit</button>
-    <button data-a="outfit-pajamas">Pajamas</button>
-    <button data-page-target="main">Back</button>
-  </div>
-  <div data-page="more" hidden>
-    <button data-a="test-voice">Test game voice</button>
-    <button data-a="claude">Claude Code</button>
-    <button data-a="chatgpt">Codex / ChatGPT</button>
-    <button data-a="music-prev">Previous song</button>
-    <button data-a="music-toggle">Play / pause music</button>
-    <button data-a="music-next">Next song</button>
-    <button data-a="tuck">Tuck away</button>
-    <button data-a="settings">Settings / tray menu</button>
-    <button data-page-target="main">Back</button>
+    <button data-a="claude" title="Open Claude Code">Claude</button>
+    <button data-a="chatgpt" title="Open Codex / ChatGPT">GPT</button>
+    <span class="media-divider" aria-hidden="true"></span>
+    <button data-a="music-prev" aria-label="Previous song" title="Previous song"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2h2v12H2zM14 2v12L5 8z"/></svg></button>
+    <button data-a="music-toggle" aria-label="Play or pause music" title="Play / pause"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 2v12l8-6zM10 2h2v12h-2zM14 2h2v12h-2z"/></svg></button>
+    <button data-a="music-next" aria-label="Next song" title="Next song"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M12 2h2v12h-2zM2 2v12l9-6z"/></svg></button>
   </div>
 </div>
 <div id="setup"><div id="setup-body"></div><div class="err" id="setup-err"></div></div>

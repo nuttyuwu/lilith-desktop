@@ -1,86 +1,83 @@
 <p align="center">
-  <img src="docs/images/lilith-hero.png" alt="Lilith rendered against a purple demo backdrop beside the words A little company. A little mischief." width="100%">
+  <img src="docs/images/lilith-hero.png" alt="Lilith — a little company, a little mischief" width="100%">
 </p>
 
-<h1 align="center">✦ Lilith Desktop ✦</h1>
-
-<p align="center">
-  <strong>Your desktop, with a little more personality.</strong><br>
-  An unofficial fan-made companion with local chat, coding reactions, and everyday company.
-</p>
+<h1 align="center">☾ Lilith Desktop ✦</h1>
+<p align="center"><strong>A little company. A little mischief.</strong><br>A desktop pet, a coding companion, and someone to steal a little space on your screen.</p>
 
 <p align="center">
-  <img alt="Windows x64" src="https://img.shields.io/badge/Windows-x64-8c7ae6?style=for-the-badge">
-  <img alt="Local chat through Ollama" src="https://img.shields.io/badge/Chat-Ollama-c59cdb?style=for-the-badge">
-  <img alt="Private prerelease rc.4" src="https://img.shields.io/badge/Private_prerelease-rc.4-dba4c5?style=for-the-badge">
+  <img alt="Windows x64" src="https://img.shields.io/badge/Windows-x64-b9a8db?style=flat-square&labelColor=211d2d">
+  <img alt="Original game voice" src="https://img.shields.io/badge/Voice-original_game-d8b6cb?style=flat-square&labelColor=211d2d">
+  <img alt="Optional local chat" src="https://img.shields.io/badge/Chat-local_Ollama-abc7d9?style=flat-square&labelColor=211d2d">
+  <img alt="Unofficial fan project" src="https://img.shields.io/badge/Unofficial-fan_project-c8bedc?style=flat-square&labelColor=211d2d">
 </p>
 
-<p align="center">
-  <a href="https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1-rc.6"><strong>Download Lilith</strong></a> ·
-  <a href="#see-her-on-your-desktop">Demo gallery</a> ·
-  <a href="#give-lilith-a-chat-model">Set up her chat model</a> ·
-  <a href="#controls">Controls</a>
-</p>
+<p align="center"><a href="#why-shes-here">Our little introduction</a> · <a href="#see-her-on-your-desktop">Meet Lilith</a> · <a href="#install-or-run">Get started</a> · <a href="#controls">Controls</a> · <a href="#give-lilith-a-chat-model">Local chat</a></p>
 
 ---
 
-## Why I made this
+## Why she's here
 
-I'll be honest: I'm not happy with where the second game is going. To me, it stripped away much of the original game's theme and aesthetic, and I don't really care for that direction. Those were a big part of why the original stayed with me.
+**Me:** I'll be honest: I don't really like where the second game is going. The original theme and aesthetic were a big part of why I loved it, and I feel like some of that got stripped away.
 
-Even though I don't like where the second game is going, I still like its desktop pet, and I want people to support the creators by getting the game themselves. This app starts with your own installed copy of the game and prepares the assets from it once.
+But the desktop pet? I still love that part.
 
-What I do like is Lilith's existing desktop pet. The game's creators had already done the character work: the model, animations, expressions, voices, and all those little reactions. That was the part I wanted to spend more time with.
+The creators had already given her the model, the animations, the voices, and all those little reactions. I wanted to take that pet and make her more interactive—to have her around while I'm coding, listening to music, or just spending too much time at my desk.
 
-The desktop pet was already there. I wanted to build on that idea with something more interactive: a companion that reacts to what I'm doing, notices the hour, and becomes part of my workflow. This project builds a Windows desktop app around the character rig and assets read from your own installed copy of the game.
+So I added Claude Code reactions, time awareness, music controls, and optional local chat. I'm trying to keep what made her feel like Lilith in the first place, especially her original voice and interactions.
 
-So I added Claude Code reactions, time and day awareness, Spotify controls, and local chat through Ollama. She can still walk around, rest, change clothes, and react when you click her. Now she also has more to respond to while you're actually using your computer.
+> **Lilith:** “He says it's a project. I think he just wanted me to stay a little longer.”
+
+I still want you to get the game and support its creators. This companion prepares its character assets from **your own installed copy**. Their character work is theirs; the added desktop behavior is my part.
+
+*The little Lilith asides in this README are written for this page, not quotations from the game.*
 
 ## See her on your desktop
 
 <p align="center">
-  <img src="docs/images/lilith-in-action.gif" alt="Lilith greets you, giggles, waves, casts magic, and claps in a looping animation demo" width="500"><br>
-  <strong>A little hello. A little magic. A lot of personality.</strong>
+  <img src="docs/images/lilith-in-action.gif" alt="Lilith greeting, waving, giggling, and casting magic using her actual animations" width="500"><br>
+  <sub>✦ A familiar face. A little hello. Some room for mischief. ✦</sub>
 </p>
 
-*Silent animation showcase captured frame by frame from the app's renderer, with a staged backdrop and captions. These are Lilith's actual character animations; the captions are demo text, not generated chat replies.*
-
 <table>
-  <tr>
-    <td align="center" width="50%"><img src="docs/images/lilith-greeting.png" alt="Lilith in her casual outfit saying Were you waiting for me?" width="350"><br><strong>A familiar face</strong><br>Animated expressions, little greetings, and the original character's charm.</td>
-    <td align="center" width="50%"><img src="docs/images/lilith-chat.png" alt="Lilith with her chat input, Claude and GPT buttons, and music controls visible" width="350"><br><strong>More ways to interact</strong><br>Open chat, reach your coding tools, and control music from her compact interface.</td>
-  </tr>
+<tr>
+<td align="center" width="50%"><img src="docs/images/lilith-greeting.png" alt="Lilith in her casual outfit" width="350"><br><strong>Someone to come back to</strong><br>Original expressions, game recordings, and little reactions.</td>
+<td align="center" width="50%"><img src="docs/images/lilith-chat.png" alt="Earlier preview of Lilith's chat and compact controls" width="350"><br><strong>Company while you work</strong><br>Coding shortcuts, conversation, and music within reach.</td>
+</tr>
 </table>
 
-*Cursor-free, lossless PNG captures from the app's renderer, with a staged backdrop and demo dialogue. Click an image to view it at full resolution. Character artwork and animations belong to the original game's creators.*
+<sub>These are staged renderer captures using the real character animations. Captions are demo text. The still images show an earlier interface; the current source has a smaller toolbar and glass-style text bar. This gallery is an animation showcase, not proof of every integration below.</sub>
+
+## What we do together
+
+| | Me | Lilith |
+|---|---|---|
+| **✦ Coding company** | Claude Code hooks tell her when coding activity happens. | “I'll be here for the little victories.” |
+| **♫ Music** | Previous, play/pause, and next controls in her compact right-click toolbar. | “You pick the song. I'll keep you company.” |
+| **☾ A little space** | Tuck her away with sparkles and bring her back to her previous spot. | “Call me when you want me back.” |
+| **♡ Everyday moments** | Head pats, game dialogue, morning greetings, outfits, and resting on your desktop. | “Not everything needs to be a big conversation.” |
+| **✎ Optional chat** | Text conversations through a local Ollama model. | “You can tell me what's on your mind.” |
+
+**Her voice comes from the game.** AI-generated speech is paused while I work on its quality. You don't need an LLM or a voice model just to enjoy the desktop pet.
 
 ## Make yourself at home
 
-| 💬 Talk | ✦ Work together | ☾ Keep company |
-|---|---|---|
-| Local conversation through Ollama and Llama 3.2. | Reactions to Claude Code activity and access to coding tools. | Time-aware reactions, outfits, and little moments throughout the day. |
-| [Set up the model](#give-lilith-a-chat-model) | [Integration details](#optional-integrations-and-local-data) | [Learn the controls](#controls) |
+1. **Install your own copy of the original game.** Her first setup uses it to prepare the assets.
+2. **Start Lilith and follow asset setup.** The prepared assets are reused afterward.
+3. **Make room for her.** Drag her, right-click for the compact toolbar, or use the tray for the rest of her settings.
+4. **Add local chat if you want it.** [Ollama and model instructions are below](#give-lilith-a-chat-model).
 
-> **Getting started:** install the original game → [download Lilith](https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1-rc.6) → click **Start** to prepare her assets. For generated chat, [install Ollama and the model](#give-lilith-a-chat-model).
+> **Lilith:** “We can start with just a hello.”
 
-## What I added
-
-- **Claude Code reactions:** Lilith responds to coding activity through local hooks.
-- **Time and day awareness:** reactions and outfit changes tied to your computer's clock.
-- **Local conversation:** chat through Ollama with a model running on your computer.
-- **Spotify controls:** playback controls and music-related reactions.
-- **App awareness:** reactions to what you're doing, with a switch to turn this off.
-- **Desktop controls:** draggable placement, four sizes, outfit choices, and a tuck-away shortcut.
-
-The character, artwork, animations, and voices belong to the original game's creators. My contribution is the desktop app and its added interactions.
+---
 
 ## Current status
 
-**Version `1.0.1-rc.6` — private prerelease.** The Windows builds include bundled asset preparation, chat-model guidance, smoother tuck/return movement, scaled-display movement corrections, game-style controls, and a voice playback check. The earlier `rc.1` received focused manual checks for installation, launch, screen-edge placement, size changes, hook preference persistence, and quitting; those observations are not a clean-machine validation of this new setup flow.
+**Version 1.0.1 — Windows x64.** [Download the setup installer or portable Lilith.exe](https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1). Executables are release attachments, not files in the source repository.
 
-This is still a work in progress. Clean-machine setup, audio, sleep/wake, multiple monitors, and a continuously observed long run need more testing. See the [release notes](CHANGELOG.md) and [validation record](docs/RELEASE.md) for the exact coverage.
+This release brings the compact controls, glass-style text input, sparkle tuck/return, original game dialogue and voice timing, and separate everyday/Claude chat contexts. AI-generated speech is paused; local text chat is optional.
 
-Source and downloads are available in the private `nuttyuwu/lilith-desktop` repository. A public release has not been published; distribution of the game-derived face icon and the Spine runtime still needs to be cleared.
+I've checked the source app on my Windows laptop. Clean-machine setup, sleep/wake, multiple monitors, and the exact screenshot-overlay case still need broader testing. See the [changelog](CHANGELOG.md) and [validation record](docs/RELEASE.md) for what was actually checked. The Windows downloads are unsigned.
 
 ## Requirements
 
@@ -94,7 +91,7 @@ The animated model, textures, voices, and dialogue are extracted from the player
 
 ## Install or run
 
-Download the current [private prerelease](https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1-rc.6). You must have access to this repository to view its files. The Windows binaries are unsigned.
+Download the current [Windows release](https://github.com/nuttyuwu/lilith-desktop/releases/tag/v1.0.1). The Windows binaries are unsigned.
 
 | File | Use |
 |---|---|
@@ -117,7 +114,7 @@ If an instance is already running, launching again brings that instance back int
 |---|---|
 | Open the app menu | Right-click Lilith's system-tray icon; it may be in the hidden-icons area. |
 | Tuck or bring her back | `Ctrl+Alt+C` |
-| Open chat and conversation topics | `Ctrl+Alt+L`, or right-click → Talk to Lilith… |
+| Open chat and conversation topics | `Ctrl+Alt+L`, or tray → Talk |
 | Move her | Drag the character, then release. |
 | Change outfit, size, screen, voice, or language | Tray → Settings, or the outfit items in the tray menu |
 | Recenter her | Tray → Settings → Reset position |
@@ -144,6 +141,16 @@ The model used with this project is **Llama 3.2 (`llama3.2:latest`) through Olla
 At launch, Lilith checks whether her chat backend and a model are available. If Ollama is unavailable, her speech bubble offers this setup guide. If Ollama is running without a chat model, she says, “In order for me to chat with you, please install the Llama 3.2 model,” and clicking the bubble copies the download command. This is an on-screen setup message, not newly synthesized voice audio.
 
 If Ollama is already installed but stopped, open it or try chatting so Lilith can attempt to start it. For a custom `LILITH_OLLAMA` endpoint, make sure that server is reachable and has the model installed. `LILITH_MODEL` can select another installed model; otherwise Lilith prefers an installed model named Lilith, then `llama3.2:latest`, then another non-embedding model. Basic pet animations and recorded reactions still work without a language model.
+
+## Quick controls
+
+Right-click Lilith for the compact dark toolbar: **Claude**, **GPT**, **Previous song**, **Play / pause**, and **Next song**. All other options are in her system-tray menu, including chat, outfits, tuck, voice settings, and Quit. **Ctrl+Alt+L** still opens chat; Escape or another right-click dismisses the quick menu.
+
+## Voice: original game recordings
+
+AI-generated speech is disabled for now, including English voice selection and auditions. Lilith uses the original Chinese or Japanese recordings extracted from your copy of the game. Choose the game voice in tray Settings; text chat still works without synthesized speech.
+
+The experimental local Qwen implementation and downloaded models are retained for future work, but no speech worker starts. Morning greetings use the game's dialogue during 06:00–09:00; the first later morning touch offers the game's going-out conversation once per day. This touch mapping is a desktop adaptation using the original dialogue and reply choices. Dialogue chains wait for each recording to finish, and head pats no longer schedule an extra random flirt line.
 
 ## Optional integrations and local data
 
@@ -180,7 +187,7 @@ cd lilith-pet
 npm run release:prepare
 ```
 
-This command rebuilds both x64 executables with publishing disabled, checks the packaged runtime and source against the pinned inputs, and assembles an allowlisted source archive, manifests, release notes, and SHA-256 checksums under `release/v1.0.1-rc.3/`. The build outputs also remain in `lilith-pet/dist/`. Building downloads Electron and packaging tools if they are not cached. The command does not upload anything; a successful build does not replace the manual checks in [Release preparation](docs/RELEASE.md).
+This command rebuilds both x64 executables with publishing disabled, checks the packaged runtime and source against the pinned inputs, and assembles an allowlisted source archive, manifests, release notes, and SHA-256 checksums under `release/v<package-version>/`. The build outputs also remain in `lilith-pet/dist/`. Building downloads Electron and packaging tools if they are not cached. The command does not upload anything; a successful build does not replace the manual checks in [Release preparation](docs/RELEASE.md).
 
 Use the candidate's `SHA256SUMS.txt` and `BUILD_INFO.json` for exact artifact hashes and build information. The GitHub Actions workflow runs only when manually dispatched. It saves a candidate artifact for review and does not publish a GitHub release or run the automated test suite.
 
@@ -217,6 +224,12 @@ The project depends on Esoteric Software's Spine runtime under its [Spine Runtim
 
 ### If Lilith is silent
 
-Use **Voice** on her toolbar, or **Settings → Voice → Test voice** in the tray menu. Select Japanese or Chinese if her voice is off. If there is no playback error but you hear nothing, check Windows mute, Volume mixer, and the selected output device. The game’s recorded lines have voices; generated Ollama chat and setup notices are text-only, with no text-to-speech engine.
+Use **Settings → Voice → Test voice** in the tray menu. Select Japanese or Chinese if her voice is off. If there is no playback error but you hear nothing, check Windows mute, Volume mixer, and the selected output device. The game’s recorded lines have voices. Generated chat is text-only while AI speech is paused; setup notices also remain on-screen text.
 
-Right-click Lilith for the original desktop pet’s white-button controls. Dress up changes her outfit; More controls contains voice testing, Claude/Codex, music, tuck away, and the full tray settings. Escape or clicking another app closes the menu. Button artwork is loaded from your own extracted game assets.
+Right-click Lilith for the compact dark Claude/GPT and music toolbar above her head. Other commands are in the tray menu. Escape or clicking another app closes the quick menu.
+
+
+
+
+
+

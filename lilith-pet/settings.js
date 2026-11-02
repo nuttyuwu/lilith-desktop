@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const SIZES = { mini: 0.25, small: 0.45, medium: 0.65, large: 0.85 };   // fraction of the screen's work-area height
-const DEFAULTS = { display: 'primary', size: 'small', alwaysOnTop: true, pos: null, voice: 'jp', dayCycle: true, profile: null, lang: null, listen: false, quality: 'auto',
+const DEFAULTS = { aiSpeech: false, aiSpeechDevice: 'auto', aiVoiceEn: 0, aiVoiceZh: 43, aiSpeechSpeed: 1, display: 'primary', size: 'small', alwaysOnTop: true, pos: null, voice: 'jp', dayCycle: true, profile: null, lang: null, listen: false, quality: 'auto',
   appAware: true, chatter: 'normal', clockClothes: true, hideFullscreen: true, claudeHook: true, since: 0 };   // since: the day you met her (ms)   // appAware: comments on the app in front / turns her back on private windows
 // Text languages the game ships (extract_lilith.py -> dialogue/lines_<tag>.json). voice: the game's matching voice track.
 const LANGS = [['en', 'English'], ['zh-CN', '简体中文', 'cn'], ['zh-Hant', '繁體中文', 'cn'], ['zh-HK', '粵語 (香港)', 'cn'], ['ja', '日本語', 'jp'],
@@ -23,7 +23,7 @@ function langFromLocale(loc = 'en') {
 const voiceFor = (lang) => (LANGS.find((l) => l[0] === lang) || [])[2] || null;
 const effectiveVoice = (s) => (s.voice === 'off' ? 'off' : voiceFor(s.lang) || (s.voice === 'cn' ? 'cn' : 'jp'));
 const ASPECT = 0.6;  // her width / height, matches the rig's bounds
-const SIDE = 1.4;    // window is 40% wider than her: hair swinging out in falls/landings/turns isn't cut at the window edge
+const SIDE = 2.4;    // transparent side room for the live hair physics, especially during drag and landing
 const HEAD = 1.3;     // window is 30% taller than her: room for the speech bubble above her head (pet.js uses the same value)
 
 // A missing file = first run. A broken one (cut off by a crash or power loss mid-write, hand-edited) is kept as
@@ -38,12 +38,17 @@ function load(file) {
   try { fs.renameSync(file, file + '.bad'); } catch {}
   return { ...DEFAULTS };
 }
-const CHOICES = { size: Object.keys(SIZES), quality: ['auto', 'high', 'low'], voice: ['jp', 'cn', 'off'], chatter: ['chatty', 'normal', 'quiet'] };
+const CHOICES = { aiSpeechDevice: ['auto', 'gpu', 'cpu'], size: Object.keys(SIZES), quality: ['auto', 'high', 'low'], voice: ['jp', 'cn', 'off'], chatter: ['chatty', 'normal', 'quiet'] };
 function clean(s) {
+  // AI speech is parked until its voice quality is approved again.
+  s.aiSpeech = false;
   for (const [k, v] of Object.entries(DEFAULTS)) {
     if (k === 'display' || v === null) continue;   // display: 'primary' | 'largest' | a screen id
     if (typeof s[k] !== typeof v || (CHOICES[k] && !CHOICES[k].includes(s[k]))) s[k] = v;
   }
+  s.aiVoiceEn = 0;
+  s.aiVoiceZh = 43;
+  if (![0.9, 1, 1.1].includes(s.aiSpeechSpeed)) s.aiSpeechSpeed = 1;
   if (s.pos && (typeof s.pos !== 'object' || !Number.isFinite(s.pos.x))) s.pos = null;
   if (s.profile && typeof s.profile !== 'object') s.profile = null;
   if (s.lang != null && !LANGS.some((l) => l[0] === s.lang)) s.lang = null;
@@ -86,7 +91,7 @@ const PEEK = 0.35;   // fraction of her width left visible when tucked
 const TUCK_W = 1.6;   // tucked window is wider so the lean doesn't clip her hair at the window edge (height, so scale, unchanged)
 // cx: her centre x before tucking -> the nearer edge, unless another monitor sits on that side.
 function tuckBounds(displays, d, w, h, cx = Infinity) {
-  w /= SIDE;   // her width; she's centred in the wider window
+  w = h / HEAD * ASPECT;   // derive body width from height: the normal window may be capped on a narrow display
   const wa = d.workArea, midY = wa.y + wa.height / 2;
   const hasNeighbour = (x) => displays.some((o) => o.id !== d.id && x >= o.bounds.x && x < o.bounds.x + o.bounds.width && midY >= o.bounds.y && midY < o.bounds.y + o.bounds.height);
   // shortcut: if both sides have a monitor, she peeks out onto the right-hand one; fine for 2-screen setups

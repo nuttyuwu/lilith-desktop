@@ -51,6 +51,8 @@ Session Storage/
 *.resS
 *.resource
 *.wav
+!lilith-pet/voices/english.wav
+!lilith-pet/voices/chinese.wav
 *.ogg
 *.mp3
 

@@ -66,8 +66,9 @@ function stopVoice() {
 }
 // speech: a spoken line; an animation's sound effect (speech=false) never cuts one off mid-sentence.
 function playClip(p, vol = 0.9, speech = true) {
-  if (!p || !lifeCfg.voice || lifeCfg.voice === 'off') return;
+  if (aiVoice || !p || !lifeCfg.voice || lifeCfg.voice === 'off') return;
   if (!speech && voice?.speech && !voice.ended) return;
+  if (speech && voice?.speech && !voice.ended && !voice.stopped) return false;
   const url = clipUrl(p);
   window.__played?.push(decodeURIComponent(url));   // tests
   stopVoice();
@@ -81,7 +82,7 @@ function playClip(p, vol = 0.9, speech = true) {
     }
     if (ctx.state !== 'running') throw new Error('Audio output is ' + ctx.state);
     if (v.stopped) return gain.disconnect();
-    const src = ctx.createBufferSource(); src.buffer = buf; src.connect(gain); v.src = src;
+    const src = ctx.createBufferSource(); src.buffer = buf; src.connect(gain); v.src = src; v.duration = buf.duration;
     const t = ctx.currentTime + 0.005, end = t + buf.duration, g = gain.gain;
     g.setValueAtTime(0, t); g.linearRampToValueAtTime(vol, t + FADE);
     g.setValueAtTime(vol, Math.max(t + FADE, end - FADE)); g.linearRampToValueAtTime(0, end);
@@ -121,6 +122,7 @@ function greet() {
   if (bubble.classList.contains('show')) return helloClip();
   if (!lifeCfg.profile) return;   // first run: the opening performance says hello (setup.js)
   const first = !greetedOnce; greetedOnce = true;
+  if (morningGreeting()) return;
   const today = new Date(), md = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   if (first && lifeCfg.profile?.birthday === md) { birthdayParty(); if (fire('Birthday')) return; }   // cake, confetti and a gift
   if (first && [0, 6].includes(today.getDay()) && Math.random() < 0.4 && fire('Weekend')) return;
@@ -186,7 +188,7 @@ const unresolved = (s) => /\{[a-z_]+\}/.test(s.replace(KNOWN, '').replace(/\{son
 
 // A voiced game line in her bubble. filter: optional regex on the English text, or an array of line ids.
 function sayLine(filter) {
-  if (!lines.length || tucked) return false;
+  if (aiVoice || chainOn || (voice?.speech && !voice.ended && !voice.stopped) || !lines.length || tucked) return false;
   const now = new Date(), ok = (l) => !unresolved(l.text) && timefit.fitsNow(l.when, now);   // checked right before she says it: no "8 AM~" at 7 PM
   let pool = lines.filter((l) => lineVoice(l) && ok(l));
   const match = Array.isArray(filter) ? (l) => filter.includes(l.id) : (l) => filter.test(l.en);
@@ -221,12 +223,14 @@ function checkClock(force) {
   if (activity === 'sleep' && lifeCfg.dayCycle && clockOutfit() === 'casual' && !dragging && !demoing) wake();   // 8 AM: she gets up by herself (then changes)
   followClockOutfit();
   const p = period();
-  if (p === currentPeriod && !force) return;
+  const same = p === currentPeriod && !force;
   const changed = currentPeriod !== null && p !== currentPeriod;
   currentPeriod = p;
   if (!data || demoing || tucked) return;
+  if (morningGreeting() || same) return;
+  if (p === 'morning') return;   // only the once-per-date, game-window greeting above
   if (changed && !busy) {
-    const h = new Date().getHours(), trig = p === 'morning' ? 'TimeMorning' : p === 'night' ? (h < 5 ? 'TimeLateNight' : 'TimeNight') : null;
+    const h = new Date().getHours(), trig = p === 'night' ? (h < 5 ? 'TimeLateNight' : 'TimeNight') : null;
     (trig && fire(trig)) || sayLine(PERIOD_LINES[p]);
   }
 }
@@ -327,7 +331,6 @@ function nextBehavior() {
   if (casual && !perched && r < 0.12) return pullChair();   // no sofa or walks on a window's title bar
   if (casual && !perched && r < 0.30) return walk(Math.random() < 0.5 ? -1 : 1);
   const pool = [...outfit.actions, ...(IDLE_BIAS[p] || []).filter((a) => data.findAnimation(a) && (casual ? !/pajamas/.test(a) : /pajamas/.test(a)))];
-  if (casual && flirty() && Math.random() < 0.15) { play(rnd(FLIRT_ACTS[0])); return void (Math.random() < 0.6 && sayLine(FLIRT_LINES)); }   // a bit more flirty (adults)
   const moody = typeof moodPool === 'function' && moodPool();   // alive.js: her mood picks the pose now and then
   play(rnd(moody || pool));
   if (Math.random() < 0.35 * talkRate()) fire('Idle') || sayLine(PERIOD_LINES[p]) || sayLine();   // the game's idle chatter first
@@ -642,3 +645,69 @@ api.onTestVoice(async () => {
     context: actx.state, sampleRate: actx.sampleRate, duration: voice?.src?.buffer?.duration,
     channels: voice?.src?.buffer?.numberOfChannels }));
 });
+
+
+// AI voice uses the same output device as game recordings, with an independent mute setting.
+let aiVoice = null, aiPlaybackEpoch = 0, aiPlaybackQueue = Promise.resolve();
+function stopAIPlayback() {
+  aiPlaybackEpoch++;
+  aiPlaybackQueue = Promise.resolve();
+  const current = aiVoice; aiVoice = null;
+  if (!current) return;
+  for (const { source, gain } of current.sources) {
+    try { source.stop(); } catch {}
+    gain.disconnect();
+  }
+  if (data) mouth(false);
+}
+api.onAiSpeechStop(stopAIPlayback);
+api.onAiSpeech(packet => {
+  const epoch = aiPlaybackEpoch;
+  // Serialize resume/scheduling so chunks cannot overtake one another.
+  aiPlaybackQueue = aiPlaybackQueue.then(() => playAIChunk(packet, epoch));
+});
+async function playAIChunk({ samples, sampleRate, text, streamId, done }, epoch) {
+  try {
+    if (epoch !== aiPlaybackEpoch || tucked || !data) return;
+    if (done) {
+      if (aiVoice?.id === streamId) {
+        aiVoice.finished = true;
+        if (!aiVoice.sources.size) { aiVoice = null; mouth(false); api.aiSpeechPlayback('ended'); }
+      }
+      return;
+    }
+    if (!(samples instanceof Float32Array) || sampleRate !== 24000 || !samples.length || samples.length > sampleRate * 120) throw new Error('Invalid AI audio');
+    const ctx = audioCtx();
+    if (ctx.state !== 'running') {
+      let timeout;
+      try { await Promise.race([ctx.resume(), new Promise((_, reject) => { timeout = setTimeout(() => reject(new Error('Audio output did not resume')), 3000); })]); }
+      finally { clearTimeout(timeout); }
+    }
+    if (epoch !== aiPlaybackEpoch || tucked) return;
+    if (ctx.state !== 'running') throw new Error('Audio output is ' + ctx.state);
+    stopVoice();
+    if (!aiVoice) aiVoice = { id: streamId, sources: new Set(), nextTime: ctx.currentTime + .12, finished: false };
+    if (aiVoice.id !== streamId) throw new Error('Stale AI audio stream');
+    const playback = aiVoice;
+    const buffer = ctx.createBuffer(1, samples.length, sampleRate); buffer.copyToChannel(samples, 0);
+    const source = ctx.createBufferSource(), gain = ctx.createGain();
+    source.buffer = buffer; source.connect(gain); gain.connect(ctx.destination);
+    const now = Math.max(ctx.currentTime + .01, playback.nextTime);
+    playback.nextTime = now + buffer.duration;
+    gain.gain.setValueAtTime(.9, now);
+    const playing = { source, gain }; playback.sources.add(playing);
+    source.onended = () => {
+      gain.disconnect();
+      playback.sources.delete(playing);
+      if (epoch !== aiPlaybackEpoch || aiVoice !== playback) return;
+      if (!playback.sources.size) {
+        mouth(false);
+        if (playback.finished) { aiVoice = null; api.aiSpeechPlayback('ended'); }
+      }
+    };
+    mouth(true); show(text, (playback.nextTime - ctx.currentTime) * 1000 + 2000); source.start(now);
+  } catch (error) {
+    if (epoch !== aiPlaybackEpoch) return;
+    stopAIPlayback(); console.warn('AI voice playback', error.message); api.aiSpeechPlayback('failed');
+  }
+}
