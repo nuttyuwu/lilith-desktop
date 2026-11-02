@@ -30,7 +30,6 @@ So I added Claude Code reactions, time awareness, music controls, and optional l
 
 I still want you to get the game and support its creators. This companion prepares its character assets from **your own installed copy**. Their character work is theirs; the added desktop behavior is my part.
 
-*The little Lilith asides in this README are written for this page, not quotations from the game.*
 
 ## See her on your desktop
 
