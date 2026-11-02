@@ -566,6 +566,7 @@ let changeTo = null;
 function changeOutfit(name) {
   if (!data || !OUTFITS[name]) return;
   api.outfitChanged(name);   // tray tick
+  if (setupOn) { setupOutfit = name; return; }   // opening uses casual; restore the requested clothes afterwards
   if (changeTo) { changeTo = name; return; }   // already changing: the last pick wins
   if (OUTFITS[name] === outfit) return;
   if (tucked || demoing) return applyOutfit(name);
@@ -578,6 +579,7 @@ function changeOutfit(name) {
     if (!quiet && state.tracks[T_BODY]) state.tracks[T_BODY].mixDuration = 0;   // she's invisible after the snap: no blend from it
   };
   setTimeout(() => {
+    if (!changeTo || setupOn) return;
     if (dragging || tucked || demoing) return done(true);
     const snap = state.setAnimation(T_BODY, outfit === OUTFITS.pajamas ? 'stand_pajamas_snap' : 'stand_casual_snap', false);
     snap.listener = { complete: () => { poof(); done(false); }, interrupt: () => changeTo && done(true) };   // dragged mid-snap: just swap the skin

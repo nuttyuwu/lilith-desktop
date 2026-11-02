@@ -8,7 +8,7 @@ const setupBox = document.getElementById('setup'), setupBody = document.getEleme
 const GENDERS = ['male', 'female', 'nonbinary', 'unsaid'];
 const nameWidth = (s) => [...s].reduce((n, c) => n + (/[ᄀ-ᅟ⺀-꓏가-힣豈-﫿︰-﹏＀-｠￠-￦]/.test(c) ? 2 : 1), 0);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-let draft = {}, run = 0;
+let draft = {}, run = 0, setupOutfit = null;
 class Cancel extends Error {}
 const live = (r) => { if (r !== run || !setupOn) throw new Cancel(); };
 
@@ -147,7 +147,7 @@ async function playOpening(r) {
   await askQuestions(r);
   api.saveProfile(draft); lifeCfg.profile = { ...draft };   // saved before the last line: closing now keeps it
   await cue('ending', r);   // "Alright, we're companions from now on~"
-  hideCard(); setupOn = false; idle();
+  hideCard(); finishSetupPose();
 }
 
 setupBox.addEventListener('click', (e) => {
@@ -173,11 +173,22 @@ setupBox.addEventListener('keydown', (e) => {
   const b = setupBox.querySelector('button.primary'); if (b) b.click();
 });
 function onStop(e) { if (!(e instanceof Cancel)) console.error('setup', e); }
-function cancelSetup() { run++; answer = null; hideCard(); setupOn = false; bubble.className = ''; idle(); }
+function finishSetupPose() {
+  setupOn = false;
+  const restore = setupOutfit || 'casual'; setupOutfit = null;
+  unlook(); state.clearTracks(); skeleton.setToSetupPose();
+  applyOutfit(restore, true); idle();
+}
+function cancelSetup() { run++; answer = null; hideCard(); bubble.className = ''; finishSetupPose(); }
 
 function startSetup() {
-  if (!data || demoing) return;
+  if (!data || demoing || setupOn) return;
   showBar(false); endActivity(false); closeChat(); setupOn = true; const r = ++run;
+  // The original show_* opening is authored for casual clothes. Pajama sleeves
+  // use a different rig pose and detach when those gestures are applied to them.
+  setupOutfit = changeTo || (outfit === OUTFITS.pajamas ? 'pajamas' : 'casual');
+  changeTo = null; stopChain();
+  unlook(); state.clearTracks(); skeleton.setToSetupPose(); applyOutfit('casual', true);
   api.hover(true); api.focus();   // the card needs clicks and typing
   draft = { ...(lifeCfg.profile || {}) };
   const langs = lifeCfg.langs || [['en', 'English']];

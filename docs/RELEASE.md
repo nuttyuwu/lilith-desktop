@@ -2,7 +2,9 @@
 
 The user requested on November 2, 2026 that future minor fixes be available through setup. Unless the user explicitly holds publication, finishing a minor fix includes a patch version bump, appropriate checks, a fresh setup-only build, and a stable GitHub release marked latest with the installer and SHA256SUMS.txt. A source push alone does not complete delivery. Preserve validation limitations in the notes. Never commit EXEs or publish a standalone Lilith.exe; setup installs it locally.
 
-# 1.0.3 covered sleep fix
+# 1.0.3 covered sleep and setup pose fixes
+
+The setup opening now temporarily uses casual clothes to match its show_* gestures. Completion or cancellation clears the opening pose and restores the selected outfit; outfit requests during setup are deferred until it finishes. Cursor-look offsets are cleared before pose resets. Syntax and code review passed; the full opening interaction and outfit restoration have not yet been manually exercised.
 
 Normal naps now start covered. Removed the 25-second scheduler’s random blanket-removal branch; an explicitly uncovered nap settles under the blanket instead. Sleep reactions only start from a sleep idle, keeping lie-down and existing reaction transitions intact. Cover state changes only after the movement is accepted.
 

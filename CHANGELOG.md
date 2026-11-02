@@ -1,7 +1,8 @@
-# 1.0.3 — Keep Lilith comfortable while sleeping
+# 1.0.3 — Stable sleep and setup poses
 
 - Normal naps start covered and no longer randomly remove the blanket.
 - Sleep reactions finish before another starts, preserving the queued resting pose.
+- Setup uses the casual outfit that matches the original opening gestures, then restores the selected clothes.
 - Available through setup’s Update from GitHub button.
 
 # 1.0.2 — Setup-only installation and maintenance
