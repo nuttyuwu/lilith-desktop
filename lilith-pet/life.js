@@ -283,7 +283,7 @@ for (const ev of ['mousedown', 'keydown']) window.addEventListener(ev, () => {
   if (activity === 'sleep' && Date.now() - lastDisturb > 4000) {   // poke her asleep: she mumbles, gets grumpier, pulls the blanket back; she sleeps on
     lastDisturb = Date.now(); disturbs++;
     remember('woken');
-    if (sleepBare && disturbs >= 2) { sleepBare = false; sleepMove('sleep_pajamas_cover_blanket'); }   // "five more minutes": blanket back over her
+    if (sleepBare && disturbs >= 2) sleepMove('sleep_pajamas_cover_blanket');   // "five more minutes": blanket back over her
     else if (/_idle(_bare)?$/.test(state.tracks[T_BODY]?.animation?.name || '')) sleepMove(sleepBare ? 'sleep_pajamas_twitch_bare' : 'sleep_pajamas_mumble');
     fire(disturbs === 1 ? 'SleepDisturb' : disturbs === 2 ? 'SleepDisturbFatiguedFirst' : 'SleepDisturbFatiguedSecond', { force: true });
   }
@@ -419,20 +419,18 @@ function goSleep(bare) {   // bare: false = straight under the blanket (alive.js
   sleepUntil = Date.now() + SLEEP_MS;
   // Two floors: under the blanket its edge is the floor (the frame's bottom); without it her hip and legs are, and her
   // hand and hair hang over the taskbar edge (the rig draws her on a bed). The window drops by the difference; the
-  // camera eases between the two as she kicks the blanket off or pulls it back.
+  // camera eases between the two if an explicitly uncovered nap becomes covered.
   sleepDrop = f ? Math.max(0, bareGround(skins) - f.y) : 0; sleepWin = false;
   setTimeout(() => { if (activity === 'sleep' && sleepDrop) api.sit(sleepDrop / (app.renderer.camera.zoom * (window.devicePixelRatio || 1)), true); }, 400);
-  sleepBare = bare ?? Math.random() < 0.3;   // sometimes she flops down without the blanket and pulls it over later
+  sleepBare = bare === true;   // normal naps start covered and keep the blanket
   state.setAnimation(T_BODY, sleepBare ? 'sleep_pajamas_lie_down_bare' : 'sleep_pajamas_lie_down', false);
   state.addAnimation(T_BODY, sleepPose(), true, 0);
-  actTimer = setInterval(() => {   // every 25 s: sleep talk, a twitch, kicking the blanket off or pulling it back
+  actTimer = setInterval(() => {   // quiet sleep movements; never randomly remove her blanket
     if (activity !== 'sleep' || !/_idle(_bare)?$/.test(state.tracks[T_BODY]?.animation?.name || '')) return;
     if (Date.now() > sleepUntil) return wake();   // slept her 30 min: up by herself
     const r = Math.random();
-    if (sleepBare && r < 0.25) { sleepBare = false; sleepMove('sleep_pajamas_cover_blanket'); }
-    else if (sleepBare && r < 0.5) sleepMove('sleep_pajamas_twitch_bare');
-    else if (!sleepBare && r < 0.08) { sleepBare = true; sleepMove('sleep_pajamas_take_blanket'); }
-    else if (!sleepBare && r < 0.38) { sleepMove('sleep_pajamas_mumble'); if (Math.random() < 0.4) fire('Sleep', { force: true }); }
+    if (sleepBare) sleepMove('sleep_pajamas_cover_blanket');
+    else if (r < 0.3) { sleepMove('sleep_pajamas_mumble'); if (Math.random() < 0.4) fire('Sleep', { force: true }); }
   }, 25000);
   disturbs = 0; setTimeout(() => activity === 'sleep' && fire('Sleep', { force: true }), 5000);
 }
@@ -457,7 +455,14 @@ function bareGround(skins) {   // her lowest hip / leg point lying without the b
 }
 const SLEEP_MS = 30 * 60000;   // left alone she sleeps 30 min; clicks don't wake her, a drag does (and she keeps her pillow)
 const sleepPose = () => (sleepBare ? 'sleep_pajamas_idle_bare' : 'sleep_pajamas_idle');
-function sleepMove(n) { state.setAnimation(T_BODY, n, false); state.addAnimation(T_BODY, sleepPose(), true, 0); }
+function sleepMove(n) {
+  // Presence/late-night notifications may arrive during lie-down or another reaction.
+  // Keep that movement and its queued idle intact instead of restarting the bedding pose.
+  if (activity !== 'sleep' || !/^sleep_pajamas_idle(_bare)?$/.test(state.tracks[T_BODY]?.animation?.name || '')) return;
+  if (n === 'sleep_pajamas_cover_blanket') sleepBare = false;
+  state.setAnimation(T_BODY, n, false);
+  state.addAnimation(T_BODY, sleepPose(), true, 0);
+}
 function wake() {
   if (activity !== 'sleep') return;
   clearInterval(actTimer); activity = 'waking';
